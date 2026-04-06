@@ -18,5 +18,6 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthService>());
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<ErrorLogService>();
 
 await builder.Build().RunAsync();

@@ -6,99 +6,168 @@
 
 <PageTitle>Productos - NetInventory</PageTitle>
 
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-    <h2>Productos</h2>
-    <button @onclick='() => Navigation.NavigateTo("/products/new")' style="padding:8px 16px;cursor:pointer;">
-        + Nuevo Producto
+<div class="page-title-box">
+    <h4><i class="bi bi-box-seam mr-2"></i>Productos</h4>
+    <button class="btn btn-principal" @onclick='() => Navigation.NavigateTo("/products/new")'>
+        <i class="bi bi-plus-lg mr-1"></i> Nuevo Producto
     </button>
 </div>
 
-<div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
-    <div>
-        <label>Categoría: </label>
-        <input @bind="categoryFilter" @bind:event="oninput" @bind:after="ResetAndLoad"
-               placeholder="Filtrar categoría" style="padding:6px;margin-left:4px;" />
-    </div>
-    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-        <input type="checkbox" @bind="lowStockOnly" @bind:after="ResetAndLoad" />
-        Solo stock bajo
-    </label>
-    <div>
-        <label>Por página: </label>
-        <select @bind="pageSize" @bind:after="ResetAndLoad" style="padding:6px;margin-left:4px;">
-            <option value="5">5</option>
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-        </select>
+<!-- Filtros -->
+<div class="card">
+    <div class="card-body" style="padding:16px 24px;">
+        <div class="row align-items-end">
+            <div class="col-md-4 col-sm-6">
+                <div class="form-group mb-2 mb-md-0">
+                    <label>Categoría</label>
+                    <select id="categorySelect" class="form-control" @onchange="OnCategoryChange">
+                        <option value="">Todas las categorías</option>
+                        @foreach (var cat in _categories)
+                        {
+                            <option value="@cat">@cat</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="form-group mb-2 mb-md-0">
+                    <label>Por página</label>
+                    <select class="form-control" @bind="pageSize" @bind:after="ResetAndLoad">
+                        <option value="5">5 registros</option>
+                        <option value="10">10 registros</option>
+                        <option value="20">20 registros</option>
+                        <option value="50">50 registros</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="form-group mb-2 mb-md-0 d-flex align-items-end" style="height:100%;">
+                    <div class="custom-control custom-switch mt-4">
+                        <input type="checkbox" class="custom-control-input" id="lowStockSwitch"
+                               @bind="lowStockOnly" @bind:after="ResetAndLoad" />
+                        <label class="custom-control-label" for="lowStockSwitch" style="cursor:pointer;">
+                            Solo stock bajo
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6 text-right">
+                <button class="btn btn-outline-secondary btn-sm mt-4" @onclick="ClearFilters">
+                    <i class="bi bi-x-lg"></i> Limpiar
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
-@if (loading)
-{
-    <p>Cargando...</p>
-}
-else if (pagedResult.Items.Count == 0)
-{
-    <p>No hay productos.</p>
-}
-else
-{
-    <table style="width:100%;border-collapse:collapse;">
-        <thead>
-            <tr style="border-bottom:2px solid #dee2e6;text-align:left;">
-                <th style="padding:8px;">Nombre</th>
-                <th style="padding:8px;">SKU</th>
-                <th style="padding:8px;">Categoría</th>
-                <th style="padding:8px;">Stock</th>
-                <th style="padding:8px;">Precio unit.</th>
-                <th style="padding:8px;">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var p in pagedResult.Items)
+<!-- Tabla -->
+<div class="card">
+    <div class="card-body">
+        <div class="card-title d-flex align-items-center justify-content-between">
+            <span>Listado de productos</span>
+            @if (pagedResult.TotalCount > 0)
             {
-                <tr style="border-bottom:1px solid #dee2e6; @(p.QuantityInStock < 10 ? "background-color:#fff3cd;" : "")">
-                    <td style="padding:8px;">@p.Name</td>
-                    <td style="padding:8px;">@p.SKU</td>
-                    <td style="padding:8px;">@p.Category</td>
-                    <td style="padding:8px;">
-                        @p.QuantityInStock
-                        <LowStockBadge Quantity="@p.QuantityInStock" />
-                    </td>
-                    <td style="padding:8px;">@p.UnitPrice.ToString("C")</td>
-                    <td style="padding:8px;display:flex;gap:6px;">
-                        <button @onclick='() => Navigation.NavigateTo($"/products/{p.Id}")' style="cursor:pointer;padding:4px 10px;">Ver</button>
-                        <button @onclick='() => Navigation.NavigateTo($"/products/{p.Id}/edit")' style="cursor:pointer;padding:4px 10px;">Editar</button>
-                        <button @onclick='() => ConfirmDelete(p)' style="cursor:pointer;padding:4px 10px;background:#dc3545;color:white;border:none;">Eliminar</button>
-                    </td>
-                </tr>
+                <span class="badge badge-pill" style="background:#24356a;color:#fff;font-size:11px;font-weight:600;">
+                    @pagedResult.TotalCount total
+                </span>
             }
-        </tbody>
-    </table>
-
-    <div style="display:flex;align-items:center;gap:12px;margin-top:16px;justify-content:space-between;">
-        <span style="font-size:0.9em;color:#666;">
-            Mostrando @((currentPage - 1) * pageSize + 1)–@(Math.Min(currentPage * pageSize, pagedResult.TotalCount)) de @pagedResult.TotalCount productos
-        </span>
-        <div style="display:flex;gap:6px;">
-            <button @onclick="PreviousPage" disabled="@(!pagedResult.HasPreviousPage)" style="padding:4px 12px;cursor:pointer;">
-                &laquo; Anterior
-            </button>
-            @for (var i = 1; i <= pagedResult.TotalPages; i++)
-            {
-                var pageNum = i;
-                <button @onclick="() => GoToPage(pageNum)"
-                        style="padding:4px 12px;cursor:pointer;@(pageNum == currentPage ? "background:#0d6efd;color:white;border-color:#0d6efd;" : "")">
-                    @pageNum
-                </button>
-            }
-            <button @onclick="NextPage" disabled="@(!pagedResult.HasNextPage)" style="padding:4px 12px;cursor:pointer;">
-                Siguiente &raquo;
-            </button>
         </div>
+
+        @if (loading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border" style="color:#24356a;" role="status"></div>
+                <p class="mt-2 text-muted" style="font-size:12px;">Cargando...</p>
+            </div>
+        }
+        else if (pagedResult.Items.Count == 0)
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-inbox" style="font-size:48px;color:#ced4da;display:block;"></i>
+                <p class="mt-2 text-muted">No se encontraron productos con los filtros aplicados.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>SKU</th>
+                            <th>Categoría</th>
+                            <th class="text-center">Stock</th>
+                            <th class="text-right">Precio unit.</th>
+                            <th class="text-center" style="width:130px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in pagedResult.Items)
+                        {
+                            <tr class="@(p.QuantityInStock < 10 ? "row-low-stock" : "")">
+                                <td class="font-weight-500">@p.Name</td>
+                                <td><code style="font-size:11px;color:#24356a;">@p.SKU</code></td>
+                                <td>
+                                    <span class="badge badge-pill badge-light" style="border:1px solid #dee2e6;color:#495057;font-weight:500;">
+                                        @p.Category
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span>@p.QuantityInStock</span>
+                                    @if (p.QuantityInStock < 10)
+                                    {
+                                        <span class="badge-low-stock ml-1">Bajo</span>
+                                    }
+                                </td>
+                                <td class="text-right font-weight-600">$@p.UnitPrice.ToString("N2")</td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-info btn-icon" title="Ver detalle"
+                                                @onclick='() => Navigation.NavigateTo($"/products/{p.Id}")'>
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-primary btn-icon" title="Editar"
+                                                @onclick='() => Navigation.NavigateTo($"/products/{p.Id}/edit")'>
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-icon" title="Eliminar"
+                                                @onclick='() => ConfirmDelete(p)'>
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-bar">
+                <span class="pagination-info">
+                    Mostrando @((currentPage - 1) * pageSize + 1)–@(Math.Min(currentPage * pageSize, pagedResult.TotalCount))
+                    de <strong>@pagedResult.TotalCount</strong> productos
+                </span>
+                <nav aria-label="Paginación">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(!pagedResult.HasPreviousPage ? "disabled" : "")">
+                            <button class="page-link" @onclick="PreviousPage">&laquo;</button>
+                        </li>
+                        @for (var i = 1; i <= pagedResult.TotalPages; i++)
+                        {
+                            var pg = i;
+                            <li class="page-item @(pg == currentPage ? "active" : "")">
+                                <button class="page-link" @onclick="() => GoToPage(pg)">@pg</button>
+                            </li>
+                        }
+                        <li class="page-item @(!pagedResult.HasNextPage ? "disabled" : "")">
+                            <button class="page-link" @onclick="NextPage">&raquo;</button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
     </div>
-}
+</div>
 
 @code {
     private PagedResult<ProductModel> pagedResult = new();
@@ -108,7 +177,22 @@ else
     private int currentPage = 1;
     private int pageSize = 10;
 
+    private static readonly List<string> _categories =
+        ["Computadoras", "Perifericos", "Monitores", "Redes", "Almacenamiento", "Audio", "Impresoras", "Otros"];
+
     protected override async Task OnInitializedAsync() => await LoadProducts();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await JS.InvokeVoidAsync("initSelect2", "categorySelect", "Todas las categorías");
+    }
+
+    private async Task OnCategoryChange(ChangeEventArgs e)
+    {
+        categoryFilter = e.Value?.ToString() ?? string.Empty;
+        await ResetAndLoad();
+    }
 
     private async Task LoadProducts()
     {
@@ -117,42 +201,30 @@ else
         loading = false;
     }
 
-    private async Task ResetAndLoad()
-    {
-        currentPage = 1;
-        await LoadProducts();
-    }
+    private async Task ResetAndLoad() { currentPage = 1; await LoadProducts(); }
+    private async Task GoToPage(int page) { currentPage = page; await LoadProducts(); }
+    private async Task PreviousPage() { if (pagedResult.HasPreviousPage) { currentPage--; await LoadProducts(); } }
+    private async Task NextPage() { if (pagedResult.HasNextPage) { currentPage++; await LoadProducts(); } }
 
-    private async Task GoToPage(int page)
+    private async Task ClearFilters()
     {
-        currentPage = page;
-        await LoadProducts();
-    }
-
-    private async Task PreviousPage()
-    {
-        if (pagedResult.HasPreviousPage)
-        {
-            currentPage--;
-            await LoadProducts();
-        }
-    }
-
-    private async Task NextPage()
-    {
-        if (pagedResult.HasNextPage)
-        {
-            currentPage++;
-            await LoadProducts();
-        }
+        categoryFilter = string.Empty;
+        lowStockOnly = false;
+        await JS.InvokeVoidAsync("setSelect2Value", "categorySelect", "");
+        await ResetAndLoad();
     }
 
     private async Task ConfirmDelete(ProductModel product)
     {
-        var confirmed = await JS.InvokeAsync<bool>("confirm", $"¿Eliminar '{product.Name}'?");
-        if (!confirmed) return;
-
-        var ok = await Products.DeleteAsync(product.Id);
-        if (ok) await LoadProducts();
+        var ok = await JS.InvokeAsync<bool>("swalConfirm",
+            "¿Eliminar producto?",
+            $"Se eliminará '{product.Name}'. Esta acción no se puede deshacer.",
+            "Sí, eliminar");
+        if (!ok) return;
+        var result = await Products.DeleteAsync(product.Id);
+        if (result)
+            await LoadProducts();
+        else
+            await JS.InvokeVoidAsync("swalError", "Error", "No se pudo eliminar el producto.");
     }
 }

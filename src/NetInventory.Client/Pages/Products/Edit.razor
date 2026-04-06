@@ -3,59 +3,109 @@
 @attribute [Authorize]
 @inject ProductService Products
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <PageTitle>@(Id is null ? "Nuevo producto" : "Editar producto") - NetInventory</PageTitle>
 
-<div style="max-width:500px;">
-    <h2 style="margin-bottom:24px;">@(Id is null ? "Nuevo producto" : "Editar producto")</h2>
+<div class="page-title-box">
+    <h4>
+        <i class="bi bi-@(Id is null ? "plus-circle" : "pencil-square") mr-2"></i>
+        @(Id is null ? "Nuevo Producto" : "Editar Producto")
+    </h4>
+    <a href="/products" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left mr-1"></i> Volver
+    </a>
+</div>
 
-    @if (loading)
-    {
-        <p>Cargando...</p>
-    }
-    else
-    {
-        <EditForm Model="createModel" OnValidSubmit="HandleSubmit">
-            <DataAnnotationsValidator />
-
-            <div style="margin-bottom:16px;">
-                <label>Nombre</label>
-                <InputText @bind-Value="createModel.Name" style="display:block;width:100%;padding:8px;margin-top:4px;" />
-                <ValidationMessage For="() => createModel.Name" />
+<div class="row">
+    <div class="col-lg-7 col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-box-seam mr-2"></i>
+                @(Id is null ? "Datos del nuevo producto" : "Modificar datos del producto")
             </div>
+            <div class="card-body">
+                @if (loading)
+                {
+                    <div class="text-center py-4">
+                        <div class="spinner-border" style="color:#24356a;" role="status"></div>
+                    </div>
+                }
+                else
+                {
+                    <EditForm Model="createModel" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
 
-            <div style="margin-bottom:16px;">
-                <label>SKU</label>
-                <InputText @bind-Value="createModel.SKU" disabled="@(Id is not null)"
-                           style="@($"display:block;width:100%;padding:8px;margin-top:4px;{(Id is not null ? "background:#f8f9fa;" : "")}")" />
-                <ValidationMessage For="() => createModel.SKU" />
+                        <div class="form-group">
+                            <label>Nombre <span class="text-danger">*</span></label>
+                            <InputText @bind-Value="createModel.Name" class="form-control" placeholder="Ej: Laptop HP 15" />
+                            <ValidationMessage For="() => createModel.Name" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>SKU <span class="text-danger">*</span></label>
+                            <InputText @bind-Value="createModel.SKU" disabled="@(Id is not null)" class="form-control"
+                                       placeholder="Ej: LAP-HP-001"
+                                       style="@(Id is not null ? "background-color:#f8f9fa;" : "")" />
+                            @if (Id is not null)
+                            {
+                                <small class="text-muted" style="font-size:11px;">
+                                    <i class="bi bi-info-circle mr-1"></i>El SKU no puede modificarse una vez creado.
+                                </small>
+                            }
+                            <ValidationMessage For="() => createModel.SKU" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Categoría <span class="text-danger">*</span></label>
+                            <select id="editCategorySelect" class="form-control" @onchange="OnCategoryChange">
+                                <option value="">Seleccionar categoría...</option>
+                                @foreach (var cat in _categories)
+                                {
+                                    <option value="@cat" selected="@(createModel.Category == cat)">@cat</option>
+                                }
+                            </select>
+                            <ValidationMessage For="() => createModel.Category" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Precio unitario (USD) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white font-weight-600">$</span>
+                                </div>
+                                <InputNumber @bind-Value="createModel.UnitPrice" class="form-control" placeholder="0.00" />
+                            </div>
+                            <ValidationMessage For="() => createModel.UnitPrice" />
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger py-2 mb-3" style="font-size:12px;">
+                                <i class="bi bi-exclamation-circle mr-1"></i> @errorMessage
+                            </div>
+                        }
+
+                        <div class="d-flex mt-3" style="gap:8px;">
+                            <button type="submit" disabled="@saving" class="btn btn-principal" style="min-width:110px;">
+                                @if (saving)
+                                {
+                                    <span class="spinner-border spinner-border-sm mr-1" role="status"></span>
+                                    <span>Guardando...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-lg mr-1"></i>
+                                    <span>Guardar</span>
+                                }
+                            </button>
+                            <a href="/products" class="btn btn-outline-secondary">Cancelar</a>
+                        </div>
+                    </EditForm>
+                }
             </div>
-
-            <div style="margin-bottom:16px;">
-                <label>Categoría</label>
-                <InputText @bind-Value="createModel.Category" style="display:block;width:100%;padding:8px;margin-top:4px;" />
-                <ValidationMessage For="() => createModel.Category" />
-            </div>
-
-            <div style="margin-bottom:16px;">
-                <label>Precio unitario</label>
-                <InputNumber @bind-Value="createModel.UnitPrice" style="display:block;width:100%;padding:8px;margin-top:4px;" />
-                <ValidationMessage For="() => createModel.UnitPrice" />
-            </div>
-
-            @if (!string.IsNullOrEmpty(errorMessage))
-            {
-                <div style="color:#dc3545;margin-bottom:12px;">@errorMessage</div>
-            }
-
-            <div style="display:flex;gap:12px;">
-                <button type="submit" disabled="@saving" style="padding:8px 24px;cursor:pointer;">
-                    @(saving ? "Guardando..." : "Guardar")
-                </button>
-                <a href="/products" style="padding:8px 16px;text-decoration:none;border:1px solid #ccc;">Cancelar</a>
-            </div>
-        </EditForm>
-    }
+        </div>
+    </div>
 </div>
 
 @code {
@@ -66,6 +116,9 @@
     private bool saving;
     private string? errorMessage;
 
+    private static readonly List<string> _categories =
+        ["Computadoras", "Perifericos", "Monitores", "Redes", "Almacenamiento", "Audio", "Impresoras", "Otros"];
+
     protected override async Task OnInitializedAsync()
     {
         if (Id is not null)
@@ -74,14 +127,23 @@
             var product = await Products.GetByIdAsync(Id.Value);
             if (product is not null)
             {
-                createModel.Name = product.Name;
-                createModel.SKU = product.SKU;
+                createModel.Name    = product.Name;
+                createModel.SKU     = product.SKU;
                 createModel.Category = product.Category;
                 createModel.UnitPrice = product.UnitPrice;
             }
             loading = false;
         }
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await JS.InvokeVoidAsync("initSelect2", "editCategorySelect", "Seleccionar categoría...");
+    }
+
+    private void OnCategoryChange(ChangeEventArgs e)
+        => createModel.Category = e.Value?.ToString() ?? string.Empty;
 
     private async Task HandleSubmit()
     {
@@ -92,25 +154,29 @@
         {
             var result = await Products.CreateAsync(createModel);
             if (result is not null)
+            {
+                await JS.InvokeVoidAsync("swalSuccess", "Producto creado", $"'{result.Name}' fue agregado correctamente.");
                 Navigation.NavigateTo("/products");
+            }
             else
-                errorMessage = "No se pudo crear el producto.";
+                errorMessage = "No se pudo crear el producto. Verifica que el SKU no esté duplicado.";
         }
         else
         {
-            var updateReq = new UpdateProductRequest
+            var result = await Products.UpdateAsync(Id.Value, new UpdateProductRequest
             {
                 Name = createModel.Name,
                 Category = createModel.Category,
                 UnitPrice = createModel.UnitPrice
-            };
-            var result = await Products.UpdateAsync(Id.Value, updateReq);
+            });
             if (result is not null)
+            {
+                await JS.InvokeVoidAsync("swalSuccess", "Producto actualizado", "Los cambios fueron guardados.");
                 Navigation.NavigateTo("/products");
+            }
             else
                 errorMessage = "No se pudo actualizar el producto.";
         }
-
         saving = false;
     }
 }

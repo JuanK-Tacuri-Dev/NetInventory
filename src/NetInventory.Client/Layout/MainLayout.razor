@@ -1,26 +1,46 @@
 @inherits LayoutComponentBase
 @inject AuthService Auth
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
-<div class="page">
-    <div class="sidebar">
+<div id="layout-wrapper">
+
+    <!-- TOPBAR -->
+    <header id="page-topbar">
+        <div class="navbar-header">
+            <div class="topbar-left">
+                <button class="btn-topbar" title="Colapsar menú" @onclick="ToggleSidebar">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+            <div class="topbar-right">
+                <AuthorizeView>
+                    <Authorized>
+                        <div class="topbar-user">
+                            <div class="avatar">@GetInitial(context.User.Identity?.Name)</div>
+                            <span class="d-none d-md-inline">@context.User.Identity?.Name</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" style="border-radius:30px;" @onclick="Logout">
+                            <i class="bi bi-box-arrow-right"></i> Salir
+                        </button>
+                    </Authorized>
+                </AuthorizeView>
+            </div>
+        </div>
+    </header>
+
+    <!-- SIDEBAR -->
+    <div class="vertical-menu">
         <NavMenu />
     </div>
 
-    <main>
-        <div class="top-row px-4" style="display:flex;justify-content:flex-end;align-items:center;gap:12px;">
-            <AuthorizeView>
-                <Authorized>
-                    <span style="font-size:0.9em;color:#555;">@context.User.Identity?.Name</span>
-                    <button style="padding:4px 12px;cursor:pointer;" @onclick="Logout">Cerrar sesión</button>
-                </Authorized>
-            </AuthorizeView>
-        </div>
-
-        <article class="content px-4">
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="page-content">
             @Body
-        </article>
-    </main>
+        </div>
+    </div>
+
 </div>
 
 @code {
@@ -29,4 +49,10 @@
         await Auth.Logout();
         Navigation.NavigateTo("/login");
     }
+
+    private async Task ToggleSidebar()
+        => await JS.InvokeVoidAsync("toggleSidebar");
+
+    private static string GetInitial(string? name)
+        => string.IsNullOrWhiteSpace(name) ? "U" : name[0].ToString().ToUpper();
 }

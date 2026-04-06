@@ -1,35 +1,37 @@
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">NetInventory</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<div class="navbar-brand-box">
+    <a href="/products" class="logo-text">Net<span>Inventory</span></a>
 </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
+<div id="sidebar-menu">
+    <ul>
         <AuthorizeView>
             <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="products">
-                        Productos
+                <li class="menu-title">Inventario</li>
+                <li>
+                    <NavLink href="products" Match="NavLinkMatch.Prefix">
+                        <i class="bi bi-box-seam"></i>
+                        <span>Productos</span>
                     </NavLink>
-                </div>
+                </li>
+                <li class="menu-title" style="margin-top:8px;">Sistema</li>
+                <li>
+                    <NavLink href="error-logs" Match="NavLinkMatch.Prefix">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <span>Error Log</span>
+                    </NavLink>
+                </li>
             </Authorized>
             <NotAuthorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="login">
-                        Iniciar sesión
+                <li>
+                    <NavLink href="login">
+                        <i class="bi bi-person"></i>
+                        <span>Iniciar sesión</span>
                     </NavLink>
-                </div>
+                </li>
             </NotAuthorized>
         </AuthorizeView>
-    </nav>
+    </ul>
 </div>
-
-@code {
-    private bool collapseNavMenu = true;
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-    private void ToggleNavMenu() => collapseNavMenu = !collapseNavMenu;
-}

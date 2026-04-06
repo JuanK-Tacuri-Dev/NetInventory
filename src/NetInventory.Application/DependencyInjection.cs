@@ -11,6 +11,7 @@ using NetInventory.Application.Products.Queries.GetProductsPaged;
 using NetInventory.Application.Services;
 using NetInventory.Application.StockMovements.Commands.RegisterMovement;
 using NetInventory.Application.StockMovements.Queries.GetMovements;
+using NetInventory.Application.ErrorLogs.Queries.GetErrorLogs;
 
 namespace NetInventory.Application;
 
@@ -35,6 +36,8 @@ public static class DependencyInjection
 
         services.AddScoped<RegisterMovementCommandHandler>();
         services.AddScoped<GetMovementsQueryHandler>();
+
+        services.AddScoped<GetErrorLogsQueryHandler>();
 
         return services;
     }

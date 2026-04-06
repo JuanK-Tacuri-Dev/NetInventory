@@ -2,85 +2,187 @@
 @attribute [Authorize]
 @inject ProductService Products
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <PageTitle>Detalle de producto - NetInventory</PageTitle>
 
-@if (product is null)
+@if (loading)
 {
-    <p>@(loading ? "Cargando..." : "Producto no encontrado.")</p>
+    <div class="text-center py-5">
+        <div class="spinner-border" style="color:#24356a;" role="status"></div>
+    </div>
+}
+else if (product is null)
+{
+    <div class="alert alert-warning">Producto no encontrado.</div>
 }
 else
 {
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <h2>@product.Name</h2>
-        <div style="display:flex;gap:8px;">
-            <a href="/products" style="padding:6px 14px;text-decoration:none;border:1px solid #ccc;">&larr; Volver</a>
-            <a href="/products/@product.Id/edit" style="padding:6px 14px;text-decoration:none;border:1px solid #0d6efd;color:#0d6efd;">Editar</a>
+    <div class="page-title-box">
+        <h4><i class="bi bi-box-seam mr-2"></i>@product.Name</h4>
+        <div class="d-flex" style="gap:8px;">
+            <a href="/products" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left mr-1"></i> Volver
+            </a>
+            <a href="/products/@product.Id/edit" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-pencil mr-1"></i> Editar
+            </a>
         </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;max-width:600px;">
-        <div><strong>SKU:</strong> @product.SKU</div>
-        <div><strong>Categoría:</strong> @product.Category</div>
-        <div><strong>Stock:</strong> @product.QuantityInStock <LowStockBadge Quantity="@product.QuantityInStock" /></div>
-        <div><strong>Precio unit.:</strong> @product.UnitPrice.ToString("C")</div>
-        <div><strong>Creado:</strong> @product.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+    <div class="row">
+        <!-- Datos del producto -->
+        <div class="col-lg-5 col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-info-circle mr-2"></i>Información del producto
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0" style="font-size:13px;">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted font-weight-600" style="width:40%;padding:8px 0;">SKU</td>
+                                <td style="padding:8px 0;"><code style="color:#24356a;">@product.SKU</code></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted font-weight-600" style="padding:8px 0;">Categoría</td>
+                                <td style="padding:8px 0;">
+                                    <span class="badge badge-pill badge-light" style="border:1px solid #dee2e6;color:#495057;">
+                                        @product.Category
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted font-weight-600" style="padding:8px 0;">Stock actual</td>
+                                <td style="padding:8px 0;">
+                                    <strong>@product.QuantityInStock</strong>
+                                    @if (product.QuantityInStock < 10)
+                                    {
+                                        <span class="badge-low-stock ml-2">Stock bajo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-pill badge-success ml-2" style="font-size:10px;">OK</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted font-weight-600" style="padding:8px 0;">Precio unitario</td>
+                                <td style="padding:8px 0;" class="font-weight-600 text-navy">$@product.UnitPrice.ToString("N2")</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted font-weight-600" style="padding:8px 0;">Creado</td>
+                                <td style="padding:8px 0;">@product.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registrar movimiento -->
+        <div class="col-lg-7 col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-arrow-left-right mr-2"></i>Registrar movimiento de stock
+                </div>
+                <div class="card-body">
+                    <EditForm Model="movementRequest" OnValidSubmit="HandleMovement">
+                        <DataAnnotationsValidator />
+                        <div class="row align-items-end">
+                            <div class="col-sm-5">
+                                <div class="form-group mb-2 mb-sm-0">
+                                    <label>Tipo de movimiento</label>
+                                    <select id="movTypeSelect" class="form-control" @onchange="OnMovTypeChange">
+                                        <option value="Inbound">Entrada (+)</option>
+                                        <option value="Outbound">Salida (-)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="form-group mb-2 mb-sm-0">
+                                    <label>Cantidad</label>
+                                    <InputNumber @bind-Value="movementRequest.Quantity" class="form-control" min="1" />
+                                    <ValidationMessage For="() => movementRequest.Quantity" />
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <button type="submit" disabled="@savingMovement" class="btn btn-principal btn-block" style="margin-top:20px;">
+                                    @if (savingMovement)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-plus-circle mr-1"></i>
+                                        <span>Registrar</span>
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                    </EditForm>
+
+                    @if (!string.IsNullOrEmpty(movementError))
+                    {
+                        <div class="alert alert-danger py-2 mt-3" style="font-size:12px;">
+                            <i class="bi bi-exclamation-circle mr-1"></i> @movementError
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
     </div>
 
-    <h3 style="margin-bottom:12px;">Registrar movimiento</h3>
-    <EditForm Model="movementRequest" OnValidSubmit="HandleMovement" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:24px;">
-        <DataAnnotationsValidator />
-        <div>
-            <label>Tipo</label>
-            <InputSelect @bind-Value="movementRequest.Type" style="display:block;padding:6px;margin-top:4px;">
-                <option value="Inbound">Entrada</option>
-                <option value="Outbound">Salida</option>
-            </InputSelect>
+    <!-- Historial de movimientos -->
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-clock-history mr-2"></i>Historial de movimientos
         </div>
-        <div>
-            <label>Cantidad</label>
-            <InputNumber @bind-Value="movementRequest.Quantity" style="display:block;padding:6px;width:80px;margin-top:4px;" />
-            <ValidationMessage For="() => movementRequest.Quantity" />
+        <div class="card-body">
+            @if (movements.Count == 0)
+            {
+                <div class="text-center py-3">
+                    <i class="bi bi-inbox" style="font-size:36px;color:#ced4da;display:block;"></i>
+                    <p class="mt-2 text-muted" style="font-size:12px;">Sin movimientos registrados.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th class="text-center" style="width:100px;">Tipo</th>
+                                <th class="text-center" style="width:90px;">Cantidad</th>
+                                <th>Fecha</th>
+                                <th>Registrado por</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var m in movements)
+                            {
+                                <tr>
+                                    <td class="text-center">
+                                        @if (m.Type == "Inbound")
+                                        {
+                                            <span class="badge-type-in"><i class="bi bi-arrow-up mr-1"></i>Entrada</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-type-out"><i class="bi bi-arrow-down mr-1"></i>Salida</span>
+                                        }
+                                    </td>
+                                    <td class="text-center font-weight-600">@m.Quantity</td>
+                                    <td>@m.Timestamp.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@(m.CreatedBy ?? "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
         </div>
-        <button type="submit" disabled="@savingMovement" style="padding:6px 16px;cursor:pointer;">
-            @(savingMovement ? "Guardando..." : "Registrar")
-        </button>
-    </EditForm>
-
-    @if (!string.IsNullOrEmpty(movementError))
-    {
-        <div style="color:#dc3545;margin-bottom:12px;">@movementError</div>
-    }
-
-    <h3 style="margin-bottom:12px;">Movimientos recientes</h3>
-    @if (movements.Count == 0)
-    {
-        <p>Sin movimientos registrados.</p>
-    }
-    else
-    {
-        <table style="width:100%;border-collapse:collapse;">
-            <thead>
-                <tr style="border-bottom:2px solid #dee2e6;text-align:left;">
-                    <th style="padding:8px;">Tipo</th>
-                    <th style="padding:8px;">Cantidad</th>
-                    <th style="padding:8px;">Fecha</th>
-                    <th style="padding:8px;">Registrado por</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var m in movements)
-                {
-                    <tr style="border-bottom:1px solid #dee2e6;">
-                        <td style="padding:8px;">@m.Type</td>
-                        <td style="padding:8px;">@m.Quantity</td>
-                        <td style="padding:8px;">@m.Timestamp.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td style="padding:8px;">@(m.CreatedBy ?? "-")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
+    </div>
 }
 
 @code {
@@ -88,7 +190,7 @@ else
 
     private ProductModel? product;
     private List<StockMovementModel> movements = [];
-    private RegisterMovementRequest movementRequest = new();
+    private RegisterMovementRequest movementRequest = new() { Type = "Inbound", Quantity = 1 };
     private bool loading = true;
     private bool savingMovement;
     private string? movementError;
@@ -100,6 +202,15 @@ else
         loading = false;
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await JS.InvokeVoidAsync("initSelect2", "movTypeSelect", "Tipo...");
+    }
+
+    private void OnMovTypeChange(ChangeEventArgs e)
+        => movementRequest.Type = e.Value?.ToString() ?? "Inbound";
+
     private async Task HandleMovement()
     {
         savingMovement = true;
@@ -109,11 +220,12 @@ else
         {
             movements = await Products.GetMovementsAsync(Id);
             product = await Products.GetByIdAsync(Id);
-            movementRequest = new();
+            movementRequest = new() { Type = movementRequest.Type, Quantity = 1 };
+            await JS.InvokeVoidAsync("swalSuccess", "Movimiento registrado", $"Se registró una {(result.Type == "Inbound" ? "entrada" : "salida")} de {result.Quantity} unidades.");
         }
         else
         {
-            movementError = "No se pudo registrar el movimiento.";
+            movementError = "No se pudo registrar el movimiento. Verifica que haya stock suficiente.";
         }
         savingMovement = false;
     }

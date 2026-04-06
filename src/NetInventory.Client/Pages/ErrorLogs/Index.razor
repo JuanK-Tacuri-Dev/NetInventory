@@ -1,0 +1,146 @@
+@page "/error-logs"
+@attribute [Authorize]
+@inject ErrorLogService ErrorLogSvc
+@inject IJSRuntime JS
+
+<PageTitle>Error Log - NetInventory</PageTitle>
+
+<div class="page-title-box">
+    <h4><i class="bi bi-exclamation-triangle mr-2"></i>Error Log</h4>
+    <button class="btn btn-outline-primary btn-sm" @onclick="Reload" disabled="@loading">
+        <i class="bi bi-arrow-clockwise mr-1"></i> Actualizar
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="card-title d-flex align-items-center justify-content-between">
+            <span>Registro de errores del sistema</span>
+            @if (logs.Count > 0)
+            {
+                <span class="badge badge-pill badge-danger" style="font-size:11px;font-weight:600;">
+                    @logs.Count errores
+                </span>
+            }
+        </div>
+
+        @if (loading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border" style="color:#24356a;" role="status"></div>
+                <p class="mt-2 text-muted" style="font-size:12px;">Cargando registros...</p>
+            </div>
+        }
+        else if (logs.Count == 0)
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-check-circle" style="font-size:48px;color:#34c38f;display:block;"></i>
+                <p class="mt-2 text-muted">No hay errores registrados. ¡El sistema funciona correctamente!</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table id="error-logs-table" class="table table-bordered table-hover" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th style="width:160px;">Fecha</th>
+                            <th style="width:130px;">Tipo de excepción</th>
+                            <th>Mensaje</th>
+                            <th style="width:80px;">Método</th>
+                            <th>Endpoint</th>
+                            <th style="width:120px;">Correlation ID</th>
+                            <th class="text-center" style="width:80px;">Stack</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in logs)
+                        {
+                            <tr>
+                                <td>@log.OccurredAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td>
+                                    <span class="badge badge-pill badge-danger" style="font-size:10px;font-weight:600;">
+                                        @log.ExceptionType
+                                    </span>
+                                </td>
+                                <td style="max-width:300px;word-break:break-word;">
+                                    <span title="@log.Message">
+                                        @(log.Message.Length > 80 ? log.Message[..80] + "..." : log.Message)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-pill @(log.Method == "GET" ? "badge-info" : "badge-warning")"
+                                          style="font-size:10px;font-weight:700;background:@GetMethodColor(log.Method);color:#fff;">
+                                        @log.Method
+                                    </span>
+                                </td>
+                                <td><code style="font-size:11px;">@log.Path</code></td>
+                                <td><code style="font-size:10px;color:#74788d;">@log.CorrelationId[..Math.Min(12, log.CorrelationId.Length)]</code></td>
+                                <td class="text-center">
+                                    @if (!string.IsNullOrEmpty(log.StackTrace))
+                                    {
+                                        <button class="btn btn-outline-secondary btn-sm btn-icon"
+                                                title="Ver stack trace"
+                                                @onclick='() => ShowStack(log)'>
+                                            <i class="bi bi-code-slash"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted" style="font-size:11px;">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<ErrorLogModel> logs = [];
+    private bool loading;
+    private bool tableInitialized;
+
+    protected override async Task OnInitializedAsync() => await Reload();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!loading && logs.Count > 0 && !tableInitialized)
+        {
+            tableInitialized = true;
+            await JS.InvokeVoidAsync("initDataTable", "error-logs-table", new[] { new[] { "0", "desc" } });
+        }
+    }
+
+    private async Task Reload()
+    {
+        loading = true;
+        tableInitialized = false;
+        logs = await ErrorLogSvc.GetAllAsync();
+        loading = false;
+    }
+
+    private async Task ShowStack(ErrorLogModel log)
+    {
+        await JS.InvokeVoidAsync("Swal.fire", new
+        {
+            title = log.ExceptionType,
+            html = $"<pre style='text-align:left;font-size:11px;max-height:400px;overflow:auto;background:#f8f9fa;padding:12px;border-radius:4px;'>{System.Net.WebUtility.HtmlEncode(log.StackTrace)}</pre>",
+            width = "800px",
+            confirmButtonColor = "#24356a",
+            confirmButtonText = "Cerrar"
+        });
+    }
+
+    private static string GetMethodColor(string method) => method switch
+    {
+        "GET"    => "#50a5f1",
+        "POST"   => "#34c38f",
+        "PUT"    => "#f1b44c",
+        "DELETE" => "#f46a6a",
+        _        => "#74788d"
+    };
+}

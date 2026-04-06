@@ -1,40 +1,69 @@
 @page "/login"
+@layout EmptyLayout
 @inject AuthService Auth
 @inject NavigationManager Navigation
 
 <PageTitle>Iniciar sesión - NetInventory</PageTitle>
 
-<div style="max-width:400px;margin:60px auto;">
-    <h2 style="margin-bottom:24px;">Iniciar sesión</h2>
-
-    <EditForm Model="model" OnValidSubmit="HandleLogin">
-        <DataAnnotationsValidator />
-
-        <div style="margin-bottom:16px;">
-            <label>Email</label>
-            <InputText @bind-Value="model.Email" style="display:block;width:100%;padding:8px;margin-top:4px;" />
-            <ValidationMessage For="() => model.Email" />
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="login-card-header">
+            <h2>Net<span>Inventory</span></h2>
+            <p>Sistema de Gestión de Inventario</p>
         </div>
+        <div class="login-card-body">
+            <EditForm Model="model" OnValidSubmit="HandleLogin">
+                <DataAnnotationsValidator />
 
-        <div style="margin-bottom:16px;">
-            <label>Contraseña</label>
-            <InputText type="password" @bind-Value="model.Password" style="display:block;width:100%;padding:8px;margin-top:4px;" />
-            <ValidationMessage For="() => model.Password" />
+                <div class="form-group">
+                    <label>Correo electrónico</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white"><i class="bi bi-envelope text-navy"></i></span>
+                        </div>
+                        <InputText @bind-Value="model.Email" class="form-control" placeholder="usuario@empresa.com" />
+                    </div>
+                    <ValidationMessage For="() => model.Email" />
+                </div>
+
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white"><i class="bi bi-lock text-navy"></i></span>
+                        </div>
+                        <InputText type="password" @bind-Value="model.Password" class="form-control" placeholder="••••••••" />
+                    </div>
+                    <ValidationMessage For="() => model.Password" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger py-2 mb-3" style="font-size:12px;">
+                        <i class="bi bi-exclamation-circle me-1"></i> @errorMessage
+                    </div>
+                }
+
+                <button type="submit" disabled="@loading" class="btn btn-primary btn-block" style="padding:10px;">
+                    @if (loading)
+                    {
+                        <span class="spinner-border spinner-border-sm mr-2" role="status"></span>
+                        <span>Verificando...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-box-arrow-in-right mr-2"></i>
+                        <span>Ingresar</span>
+                    }
+                </button>
+            </EditForm>
+
+            <div class="text-center mt-3">
+                <span style="font-size:12px;color:#74788d;">¿No tienes cuenta?</span>
+                <a href="/register" style="font-size:12px;font-weight:600;color:#24356a;"> Regístrate</a>
+            </div>
         </div>
-
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div style="color:#dc3545;margin-bottom:12px;">@errorMessage</div>
-        }
-
-        <button type="submit" disabled="@loading" style="padding:8px 24px;cursor:pointer;">
-            @(loading ? "Cargando..." : "Entrar")
-        </button>
-    </EditForm>
-
-    <p style="margin-top:16px;">
-        ¿No tienes cuenta? <a href="/register">Regístrate</a>
-    </p>
+    </div>
 </div>
 
 @code {
@@ -52,6 +81,6 @@
         if (success)
             Navigation.NavigateTo("/products");
         else
-            errorMessage = "Credenciales inválidas. Intenta de nuevo.";
+            errorMessage = "Credenciales inválidas. Verifica tu email y contraseña.";
     }
 }
