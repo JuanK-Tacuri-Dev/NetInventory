@@ -1,10 +1,12 @@
 namespace NetInventory.Application.Common.DTOs;
 
-public sealed record ProductListItem(
-    Guid Id,
-    string Name,
-    string SKU,
-    string Category,
-    int QuantityInStock,
-    decimal UnitPrice,
-    DateTime CreatedAt);
+public sealed class ProductListItem
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string SKU { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public int QuantityInStock { get; set; }
+    public decimal UnitPrice { get; set; }
+    public DateTime CreatedAt { get; set; }
+}

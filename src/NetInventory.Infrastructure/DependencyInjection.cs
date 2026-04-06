@@ -1,4 +1,5 @@
 using System.Data;
+using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.Data.Sqlite;
@@ -18,6 +19,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        SqlMapper.AddTypeHandler(new NetInventory.Infrastructure.Persistence.ReadModel.GuidTypeHandler());
+
         var connectionString = configuration.GetConnectionString("Default")
             ?? "Data Source=inventory.db";
 
