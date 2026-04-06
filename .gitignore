@@ -1,0 +1,44 @@
+# Secretos y configuración local
+.env
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+
+# Logs y datos de runtime
+logs/
+data/
+
+# Artefactos de compilación .NET
+**/bin/
+**/obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# macOS
+.DS_Store
+
+# Cobertura de tests
+coverage/
+coverage-*/
+TestResults/
+*.coverage
+*.coveragexml
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/

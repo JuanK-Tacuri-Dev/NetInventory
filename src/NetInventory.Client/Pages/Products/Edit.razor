@@ -1,0 +1,116 @@
+@page "/products/new"
+@page "/products/{Id:guid}/edit"
+@attribute [Authorize]
+@inject ProductService Products
+@inject NavigationManager Navigation
+
+<PageTitle>@(Id is null ? "Nuevo producto" : "Editar producto") - NetInventory</PageTitle>
+
+<div style="max-width:500px;">
+    <h2 style="margin-bottom:24px;">@(Id is null ? "Nuevo producto" : "Editar producto")</h2>
+
+    @if (loading)
+    {
+        <p>Cargando...</p>
+    }
+    else
+    {
+        <EditForm Model="createModel" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+
+            <div style="margin-bottom:16px;">
+                <label>Nombre</label>
+                <InputText @bind-Value="createModel.Name" style="display:block;width:100%;padding:8px;margin-top:4px;" />
+                <ValidationMessage For="() => createModel.Name" />
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label>SKU</label>
+                <InputText @bind-Value="createModel.SKU" disabled="@(Id is not null)"
+                           style="@($"display:block;width:100%;padding:8px;margin-top:4px;{(Id is not null ? "background:#f8f9fa;" : "")}")" />
+                <ValidationMessage For="() => createModel.SKU" />
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label>Categoría</label>
+                <InputText @bind-Value="createModel.Category" style="display:block;width:100%;padding:8px;margin-top:4px;" />
+                <ValidationMessage For="() => createModel.Category" />
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label>Precio unitario</label>
+                <InputNumber @bind-Value="createModel.UnitPrice" style="display:block;width:100%;padding:8px;margin-top:4px;" />
+                <ValidationMessage For="() => createModel.UnitPrice" />
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div style="color:#dc3545;margin-bottom:12px;">@errorMessage</div>
+            }
+
+            <div style="display:flex;gap:12px;">
+                <button type="submit" disabled="@saving" style="padding:8px 24px;cursor:pointer;">
+                    @(saving ? "Guardando..." : "Guardar")
+                </button>
+                <a href="/products" style="padding:8px 16px;text-decoration:none;border:1px solid #ccc;">Cancelar</a>
+            </div>
+        </EditForm>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+
+    private CreateProductRequest createModel = new();
+    private bool loading;
+    private bool saving;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id is not null)
+        {
+            loading = true;
+            var product = await Products.GetByIdAsync(Id.Value);
+            if (product is not null)
+            {
+                createModel.Name = product.Name;
+                createModel.SKU = product.SKU;
+                createModel.Category = product.Category;
+                createModel.UnitPrice = product.UnitPrice;
+            }
+            loading = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        saving = true;
+        errorMessage = null;
+
+        if (Id is null)
+        {
+            var result = await Products.CreateAsync(createModel);
+            if (result is not null)
+                Navigation.NavigateTo("/products");
+            else
+                errorMessage = "No se pudo crear el producto.";
+        }
+        else
+        {
+            var updateReq = new UpdateProductRequest
+            {
+                Name = createModel.Name,
+                Category = createModel.Category,
+                UnitPrice = createModel.UnitPrice
+            };
+            var result = await Products.UpdateAsync(Id.Value, updateReq);
+            if (result is not null)
+                Navigation.NavigateTo("/products");
+            else
+                errorMessage = "No se pudo actualizar el producto.";
+        }
+
+        saving = false;
+    }
+}

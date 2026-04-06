@@ -1,0 +1,57 @@
+@page "/register"
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>Registro - NetInventory</PageTitle>
+
+<div style="max-width:400px;margin:60px auto;">
+    <h2 style="margin-bottom:24px;">Crear cuenta</h2>
+
+    <EditForm Model="model" OnValidSubmit="HandleRegister">
+        <DataAnnotationsValidator />
+
+        <div style="margin-bottom:16px;">
+            <label>Email</label>
+            <InputText @bind-Value="model.Email" style="display:block;width:100%;padding:8px;margin-top:4px;" />
+            <ValidationMessage For="() => model.Email" />
+        </div>
+
+        <div style="margin-bottom:16px;">
+            <label>Contraseña</label>
+            <InputText type="password" @bind-Value="model.Password" style="display:block;width:100%;padding:8px;margin-top:4px;" />
+            <ValidationMessage For="() => model.Password" />
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div style="color:#dc3545;margin-bottom:12px;">@errorMessage</div>
+        }
+
+        <button type="submit" disabled="@loading" style="padding:8px 24px;cursor:pointer;">
+            @(loading ? "Cargando..." : "Registrarse")
+        </button>
+    </EditForm>
+
+    <p style="margin-top:16px;">
+        ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
+    </p>
+</div>
+
+@code {
+    private RegisterRequest model = new();
+    private string? errorMessage;
+    private bool loading;
+
+    private async Task HandleRegister()
+    {
+        loading = true;
+        errorMessage = null;
+        var success = await Auth.Register(model);
+        loading = false;
+
+        if (success)
+            Navigation.NavigateTo("/login");
+        else
+            errorMessage = "No se pudo crear la cuenta. Intenta con otro email.";
+    }
+}

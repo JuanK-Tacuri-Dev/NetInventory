@@ -1,0 +1,57 @@
+@page "/login"
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>Iniciar sesión - NetInventory</PageTitle>
+
+<div style="max-width:400px;margin:60px auto;">
+    <h2 style="margin-bottom:24px;">Iniciar sesión</h2>
+
+    <EditForm Model="model" OnValidSubmit="HandleLogin">
+        <DataAnnotationsValidator />
+
+        <div style="margin-bottom:16px;">
+            <label>Email</label>
+            <InputText @bind-Value="model.Email" style="display:block;width:100%;padding:8px;margin-top:4px;" />
+            <ValidationMessage For="() => model.Email" />
+        </div>
+
+        <div style="margin-bottom:16px;">
+            <label>Contraseña</label>
+            <InputText type="password" @bind-Value="model.Password" style="display:block;width:100%;padding:8px;margin-top:4px;" />
+            <ValidationMessage For="() => model.Password" />
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div style="color:#dc3545;margin-bottom:12px;">@errorMessage</div>
+        }
+
+        <button type="submit" disabled="@loading" style="padding:8px 24px;cursor:pointer;">
+            @(loading ? "Cargando..." : "Entrar")
+        </button>
+    </EditForm>
+
+    <p style="margin-top:16px;">
+        ¿No tienes cuenta? <a href="/register">Regístrate</a>
+    </p>
+</div>
+
+@code {
+    private LoginRequest model = new();
+    private string? errorMessage;
+    private bool loading;
+
+    private async Task HandleLogin()
+    {
+        loading = true;
+        errorMessage = null;
+        var success = await Auth.Login(model);
+        loading = false;
+
+        if (success)
+            Navigation.NavigateTo("/products");
+        else
+            errorMessage = "Credenciales inválidas. Intenta de nuevo.";
+    }
+}

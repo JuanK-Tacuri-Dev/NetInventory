@@ -1,0 +1,120 @@
+@page "/products/{Id:guid}"
+@attribute [Authorize]
+@inject ProductService Products
+@inject NavigationManager Navigation
+
+<PageTitle>Detalle de producto - NetInventory</PageTitle>
+
+@if (product is null)
+{
+    <p>@(loading ? "Cargando..." : "Producto no encontrado.")</p>
+}
+else
+{
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2>@product.Name</h2>
+        <div style="display:flex;gap:8px;">
+            <a href="/products" style="padding:6px 14px;text-decoration:none;border:1px solid #ccc;">&larr; Volver</a>
+            <a href="/products/@product.Id/edit" style="padding:6px 14px;text-decoration:none;border:1px solid #0d6efd;color:#0d6efd;">Editar</a>
+        </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;max-width:600px;">
+        <div><strong>SKU:</strong> @product.SKU</div>
+        <div><strong>Categoría:</strong> @product.Category</div>
+        <div><strong>Stock:</strong> @product.QuantityInStock <LowStockBadge Quantity="@product.QuantityInStock" /></div>
+        <div><strong>Precio unit.:</strong> @product.UnitPrice.ToString("C")</div>
+        <div><strong>Creado:</strong> @product.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+    </div>
+
+    <h3 style="margin-bottom:12px;">Registrar movimiento</h3>
+    <EditForm Model="movementRequest" OnValidSubmit="HandleMovement" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:24px;">
+        <DataAnnotationsValidator />
+        <div>
+            <label>Tipo</label>
+            <InputSelect @bind-Value="movementRequest.Type" style="display:block;padding:6px;margin-top:4px;">
+                <option value="Inbound">Entrada</option>
+                <option value="Outbound">Salida</option>
+            </InputSelect>
+        </div>
+        <div>
+            <label>Cantidad</label>
+            <InputNumber @bind-Value="movementRequest.Quantity" style="display:block;padding:6px;width:80px;margin-top:4px;" />
+            <ValidationMessage For="() => movementRequest.Quantity" />
+        </div>
+        <button type="submit" disabled="@savingMovement" style="padding:6px 16px;cursor:pointer;">
+            @(savingMovement ? "Guardando..." : "Registrar")
+        </button>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(movementError))
+    {
+        <div style="color:#dc3545;margin-bottom:12px;">@movementError</div>
+    }
+
+    <h3 style="margin-bottom:12px;">Movimientos recientes</h3>
+    @if (movements.Count == 0)
+    {
+        <p>Sin movimientos registrados.</p>
+    }
+    else
+    {
+        <table style="width:100%;border-collapse:collapse;">
+            <thead>
+                <tr style="border-bottom:2px solid #dee2e6;text-align:left;">
+                    <th style="padding:8px;">Tipo</th>
+                    <th style="padding:8px;">Cantidad</th>
+                    <th style="padding:8px;">Fecha</th>
+                    <th style="padding:8px;">Registrado por</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in movements)
+                {
+                    <tr style="border-bottom:1px solid #dee2e6;">
+                        <td style="padding:8px;">@m.Type</td>
+                        <td style="padding:8px;">@m.Quantity</td>
+                        <td style="padding:8px;">@m.Timestamp.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td style="padding:8px;">@(m.CreatedBy ?? "-")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private ProductModel? product;
+    private List<StockMovementModel> movements = [];
+    private RegisterMovementRequest movementRequest = new();
+    private bool loading = true;
+    private bool savingMovement;
+    private string? movementError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        product = await Products.GetByIdAsync(Id);
+        movements = await Products.GetMovementsAsync(Id);
+        loading = false;
+    }
+
+    private async Task HandleMovement()
+    {
+        savingMovement = true;
+        movementError = null;
+        var result = await Products.RegisterMovementAsync(Id, movementRequest);
+        if (result is not null)
+        {
+            movements = await Products.GetMovementsAsync(Id);
+            product = await Products.GetByIdAsync(Id);
+            movementRequest = new();
+        }
+        else
+        {
+            movementError = "No se pudo registrar el movimiento.";
+        }
+        savingMovement = false;
+    }
+}

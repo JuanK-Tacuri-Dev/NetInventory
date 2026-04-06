@@ -1,0 +1,11 @@
+@if (Quantity < Threshold)
+{
+    <span style="background:#dc3545;color:white;padding:2px 6px;border-radius:4px;font-size:0.8em">
+        Stock bajo
+    </span>
+}
+
+@code {
+    [Parameter] public int Quantity { get; set; }
+    [Parameter] public int Threshold { get; set; } = 10;
+}

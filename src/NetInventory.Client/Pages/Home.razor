@@ -1,0 +1,11 @@
+@page "/"
+@inject NavigationManager Navigation
+
+<AuthorizeView>
+    <Authorized>
+        @{ Navigation.NavigateTo("/products", replace: true); }
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
