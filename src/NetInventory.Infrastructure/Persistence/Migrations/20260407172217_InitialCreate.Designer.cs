@@ -23,19 +23,19 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -50,17 +50,17 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("RoleId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -72,54 +72,54 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<int>("AccessFailedCount")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -137,17 +137,17 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -159,17 +159,17 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -181,10 +181,10 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("RoleId")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("UserId", "RoleId");
 
@@ -196,16 +196,16 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Name")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Value")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
@@ -216,28 +216,28 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<bool>("IsEnabled")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("Method")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("UrlPattern")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -248,51 +248,51 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("CorrelationId")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<long>("DurationMs")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("Method")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Path")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("QueryString")
                         .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("RequestBody")
                         .HasMaxLength(8000)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("ResponseBody")
                         .HasMaxLength(8000)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<int>("StatusCode")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("UserEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("UserId")
                         .HasMaxLength(450)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -307,44 +307,44 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("CorrelationId")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("ExceptionType")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Method")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("Path")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("ReferenceCode")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("StackTrace")
                         .HasMaxLength(8000)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -361,15 +361,15 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("NetInventory.Domain.Entities.GeneralTable", b =>
                 {
                     b.Property<int>("Id")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.HasKey("Id");
 
@@ -380,29 +380,29 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("Code")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(50)
+                        ;
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int?>("ParentId")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("SortOrder")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<int>("TableId")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.HasKey("Id");
 
@@ -418,45 +418,45 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("CategoryCode")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<int>("CategoryTableId")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<int>("MaxStock")
-                        .HasColumnType("INTEGER")
+                        
                         .HasDefaultValue(0);
 
                     b.Property<int>("MinStock")
-                        .HasColumnType("INTEGER")
+                        
                         .HasDefaultValue(0);
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("OwnerId")
                         .IsRequired()
                         .HasMaxLength(450)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<int>("QuantityInStock")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -469,22 +469,22 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<bool>("IsRevoked")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.HasKey("Id");
 
@@ -499,26 +499,26 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<Guid>("ProductId")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.Property<string>("Reason")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("TEXT");
+                        ;
 
                     b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
+                        ;
 
                     b.HasKey("Id");
 
@@ -597,7 +597,7 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                     b.OwnsOne("NetInventory.Domain.ValueObjects.Money", "UnitPrice", b1 =>
                         {
                             b1.Property<Guid>("ProductId")
-                                .HasColumnType("TEXT");
+                                ;
 
                             b1.Property<decimal>("Amount")
                                 .HasColumnType("decimal(18,2)")
@@ -614,12 +614,12 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                     b.OwnsOne("NetInventory.Domain.ValueObjects.Sku", "SKU", b1 =>
                         {
                             b1.Property<Guid>("ProductId")
-                                .HasColumnType("TEXT");
+                                ;
 
                             b1.Property<string>("Value")
                                 .IsRequired()
                                 .HasMaxLength(50)
-                                .HasColumnType("TEXT")
+                                
                                 .HasColumnName("SKU");
 
                             b1.HasKey("ProductId");

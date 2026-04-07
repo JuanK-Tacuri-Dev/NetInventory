@@ -15,12 +15,12 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbAuditConfigs",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Method = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false),
-                    UrlPattern = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    IsEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(nullable: false),
+                    Method = table.Column<string>(maxLength: 10, nullable: false),
+                    UrlPattern = table.Column<string>(maxLength: 500, nullable: false),
+                    IsEnabled = table.Column<bool>(nullable: false),
+                    Description = table.Column<string>(maxLength: 200, nullable: false),
+                    CreatedAt = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -31,18 +31,18 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbAuditLogs",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    CorrelationId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Method = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false),
-                    Path = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    QueryString = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    RequestBody = table.Column<string>(type: "TEXT", maxLength: 8000, nullable: true),
-                    ResponseBody = table.Column<string>(type: "TEXT", maxLength: 8000, nullable: true),
-                    StatusCode = table.Column<int>(type: "INTEGER", nullable: false),
-                    DurationMs = table.Column<long>(type: "INTEGER", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: true),
-                    UserEmail = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    OccurredAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(nullable: false),
+                    CorrelationId = table.Column<string>(maxLength: 100, nullable: false),
+                    Method = table.Column<string>(maxLength: 10, nullable: false),
+                    Path = table.Column<string>(maxLength: 500, nullable: false),
+                    QueryString = table.Column<string>(maxLength: 1000, nullable: true),
+                    RequestBody = table.Column<string>(maxLength: 8000, nullable: true),
+                    ResponseBody = table.Column<string>(maxLength: 8000, nullable: true),
+                    StatusCode = table.Column<int>(nullable: false),
+                    DurationMs = table.Column<long>(nullable: false),
+                    UserId = table.Column<string>(maxLength: 450, nullable: true),
+                    UserEmail = table.Column<string>(maxLength: 256, nullable: true),
+                    OccurredAt = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -53,15 +53,15 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbErrorLogs",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ReferenceCode = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
-                    CorrelationId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    ExceptionType = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Message = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
-                    StackTrace = table.Column<string>(type: "TEXT", maxLength: 8000, nullable: true),
-                    Path = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    Method = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    Id = table.Column<Guid>(nullable: false),
+                    ReferenceCode = table.Column<string>(maxLength: 50, nullable: false),
+                    CorrelationId = table.Column<string>(maxLength: 100, nullable: false),
+                    ExceptionType = table.Column<string>(maxLength: 200, nullable: false),
+                    Message = table.Column<string>(maxLength: 2000, nullable: false),
+                    StackTrace = table.Column<string>(maxLength: 8000, nullable: true),
+                    Path = table.Column<string>(maxLength: 500, nullable: false),
+                    Method = table.Column<string>(maxLength: 10, nullable: false),
+                    OccurredAt = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -72,9 +72,9 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbGeneralTable",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false),
+                    Description = table.Column<string>(maxLength: 200, nullable: false),
+                    IsActive = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -85,19 +85,19 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbProducts",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    SKU = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    CategoryTableId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CategoryCode = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
-                    QuantityInStock = table.Column<int>(type: "INTEGER", nullable: false),
-                    MinStock = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 0),
-                    MaxStock = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 0),
+                    Id = table.Column<Guid>(nullable: false),
+                    Name = table.Column<string>(maxLength: 200, nullable: false),
+                    SKU = table.Column<string>(maxLength: 50, nullable: false),
+                    CategoryTableId = table.Column<int>(nullable: false),
+                    CategoryCode = table.Column<string>(maxLength: 50, nullable: false),
+                    QuantityInStock = table.Column<int>(nullable: false),
+                    MinStock = table.Column<int>(nullable: false, defaultValue: 0),
+                    MaxStock = table.Column<int>(nullable: false, defaultValue: 0),
                     UnitPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    OwnerId = table.Column<string>(type: "TEXT", maxLength: 450, nullable: false)
+                    CreatedAt = table.Column<DateTime>(nullable: false),
+                    CreatedBy = table.Column<string>(nullable: true),
+                    UpdatedBy = table.Column<string>(nullable: true),
+                    OwnerId = table.Column<string>(maxLength: 450, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -108,11 +108,11 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbRefreshTokens",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Token = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    ExpiresAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsRevoked = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(nullable: false),
+                    Token = table.Column<string>(maxLength: 128, nullable: false),
+                    UserId = table.Column<string>(nullable: false),
+                    ExpiresAt = table.Column<DateTime>(nullable: false),
+                    IsRevoked = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -123,10 +123,10 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbRoles",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<string>(nullable: false),
+                    Name = table.Column<string>(maxLength: 256, nullable: true),
+                    NormalizedName = table.Column<string>(maxLength: 256, nullable: true),
+                    ConcurrencyStamp = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -137,21 +137,21 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbUsers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
-                    UserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<string>(nullable: false),
+                    UserName = table.Column<string>(maxLength: 256, nullable: true),
+                    NormalizedUserName = table.Column<string>(maxLength: 256, nullable: true),
+                    Email = table.Column<string>(maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(nullable: false),
+                    PasswordHash = table.Column<string>(nullable: true),
+                    SecurityStamp = table.Column<string>(nullable: true),
+                    ConcurrencyStamp = table.Column<string>(nullable: true),
+                    PhoneNumber = table.Column<string>(nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(nullable: true),
+                    LockoutEnabled = table.Column<bool>(nullable: false),
+                    AccessFailedCount = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -162,15 +162,16 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbGeneralValues",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    TableId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Code = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    ParentId = table.Column<int>(type: "INTEGER", nullable: true),
-                    SortOrder = table.Column<int>(type: "INTEGER", nullable: false),
-                    Value = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TableId = table.Column<int>(nullable: false),
+                    Code = table.Column<string>(maxLength: 50, nullable: false),
+                    Description = table.Column<string>(maxLength: 200, nullable: false),
+                    ParentId = table.Column<int>(nullable: true),
+                    SortOrder = table.Column<int>(nullable: false),
+                    Value = table.Column<string>(maxLength: 500, nullable: true),
+                    IsActive = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -193,13 +194,13 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbStockMovements",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ProductId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Type = table.Column<int>(type: "INTEGER", nullable: false),
-                    Quantity = table.Column<int>(type: "INTEGER", nullable: false),
-                    Reason = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    Timestamp = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<Guid>(nullable: false),
+                    ProductId = table.Column<Guid>(nullable: false),
+                    Type = table.Column<int>(nullable: false),
+                    Quantity = table.Column<int>(nullable: false),
+                    Reason = table.Column<string>(maxLength: 500, nullable: true),
+                    Timestamp = table.Column<DateTime>(nullable: false),
+                    CreatedBy = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -216,11 +217,12 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbRoleClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    RoleId = table.Column<string>(type: "TEXT", nullable: false),
-                    ClaimType = table.Column<string>(type: "TEXT", nullable: true),
-                    ClaimValue = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RoleId = table.Column<string>(nullable: false),
+                    ClaimType = table.Column<string>(nullable: true),
+                    ClaimValue = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -237,11 +239,12 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbUserClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    ClaimType = table.Column<string>(type: "TEXT", nullable: true),
-                    ClaimValue = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(nullable: false),
+                    ClaimType = table.Column<string>(nullable: true),
+                    ClaimValue = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -258,10 +261,10 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(type: "TEXT", nullable: false),
-                    ProviderKey = table.Column<string>(type: "TEXT", nullable: false),
-                    ProviderDisplayName = table.Column<string>(type: "TEXT", nullable: true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false)
+                    LoginProvider = table.Column<string>(nullable: false),
+                    ProviderKey = table.Column<string>(nullable: false),
+                    ProviderDisplayName = table.Column<string>(nullable: true),
+                    UserId = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -278,8 +281,8 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    RoleId = table.Column<string>(type: "TEXT", nullable: false)
+                    UserId = table.Column<string>(nullable: false),
+                    RoleId = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -302,10 +305,10 @@ namespace NetInventory.Infrastructure.Persistence.Migrations
                 name: "tbUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    LoginProvider = table.Column<string>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Value = table.Column<string>(type: "TEXT", nullable: true)
+                    UserId = table.Column<string>(nullable: false),
+                    LoginProvider = table.Column<string>(nullable: false),
+                    Name = table.Column<string>(nullable: false),
+                    Value = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {

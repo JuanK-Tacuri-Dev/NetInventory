@@ -68,7 +68,7 @@ cp .env.example .env
 # (opcional) editar .env con contraseñas propias
 
 # 3. Construir y levantar todos los servicios
-docker compose -f docker/docker-compose.yml up --build
+docker compose -f docker/docker-compose.yml --env-file .env up --build
 ```
 
 | Servicio | URL |

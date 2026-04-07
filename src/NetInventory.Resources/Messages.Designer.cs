@@ -16,10 +16,10 @@ public static class Messages
     private static readonly ResourceManager _resourceManager =
         new("NetInventory.Resources.Messages", typeof(Messages).Assembly);
 
-    private static CultureInfo? _culture;
+    private static CultureInfo _culture;
 
     /// <summary>Culture used for all resource lookups. Defaults to current UI culture.</summary>
-    public static CultureInfo? Culture
+    public static CultureInfo Culture
     {
         get => _culture;
         set => _culture = value;
