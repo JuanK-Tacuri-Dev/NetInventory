@@ -1,6 +1,8 @@
 @page "/products"
 @attribute [Authorize]
 @inject ProductService Products
+@inject GeneralValueService GeneralValues
+@inject InventoryEventService InventoryEvents
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
@@ -16,44 +18,61 @@
 <!-- Filtros -->
 <div class="card">
     <div class="card-body" style="padding:16px 24px;">
-        <div class="row align-items-end">
-            <div class="col-md-4 col-sm-6">
-                <div class="form-group mb-2 mb-md-0">
-                    <label>Categoría</label>
-                    <select id="categorySelect" class="form-control" @onchange="OnCategoryChange">
-                        <option value="">Todas las categorías</option>
-                        @foreach (var cat in _categories)
+        <div class="row align-items-end" style="row-gap:8px;">
+            <div class="col-md-3 col-sm-6">
+                <div class="form-group mb-0">
+                    <label style="font-size:12px;font-weight:600;margin-bottom:4px;">Categoría</label>
+                    <div class="multiselect-wrap">
+                        <button type="button" class="multiselect-trigger" @onclick="() => _showCategoryDropdown = !_showCategoryDropdown">
+                            @if (_categoryFilters.Count == 0)
+                            {
+                                <span style="color:#6c757d;">Todas las categorías</span>
+                            }
+                            else if (_categoryFilters.Count == 1)
+                            {
+                                <span>@_categories.FirstOrDefault(c => _categoryFilters.Contains(c.Code))?.Description</span>
+                            }
+                            else
+                            {
+                                <span>Categorías <span class="multiselect-badge">@_categoryFilters.Count</span></span>
+                            }
+                            <i class="bi bi-chevron-down" style="font-size:10px;flex-shrink:0;margin-left:6px;"></i>
+                        </button>
+                        @if (_showCategoryDropdown)
                         {
-                            <option value="@cat">@cat</option>
+                            <div class="multiselect-overlay" @onclick="() => _showCategoryDropdown = false"></div>
+                            <div class="multiselect-panel">
+                                @foreach (var cat in _categories)
+                                {
+                                    <label class="multiselect-item">
+                                        <input type="checkbox"
+                                               checked="@_categoryFilters.Contains(cat.Code)"
+                                               @onchange="e => OnCategoryToggle(cat.Code, (bool)(e.Value ?? false))" />
+                                        @cat.Description
+                                    </label>
+                                }
+                            </div>
                         }
-                    </select>
+                    </div>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
-                <div class="form-group mb-2 mb-md-0">
-                    <label>Por página</label>
-                    <select class="form-control" @bind="pageSize" @bind:after="ResetAndLoad">
-                        <option value="5">5 registros</option>
-                        <option value="10">10 registros</option>
-                        <option value="20">20 registros</option>
-                        <option value="50">50 registros</option>
-                    </select>
-                </div>
-            </div>
-            <div class="col-md-3 col-sm-6">
-                <div class="form-group mb-2 mb-md-0 d-flex align-items-end" style="height:100%;">
-                    <div class="custom-control custom-switch mt-4">
+                <div class="form-group mb-0 d-flex align-items-end" style="height:100%;">
+                    <div class="custom-control custom-switch" style="padding-top:6px;">
                         <input type="checkbox" class="custom-control-input" id="lowStockSwitch"
-                               @bind="lowStockOnly" @bind:after="ResetAndLoad" />
-                        <label class="custom-control-label" for="lowStockSwitch" style="cursor:pointer;">
+                               @bind="lowStockOnly" />
+                        <label class="custom-control-label" for="lowStockSwitch" style="cursor:pointer;font-size:13px;">
                             Solo stock bajo
                         </label>
                     </div>
                 </div>
             </div>
-            <div class="col-md-2 col-sm-6 text-right">
-                <button class="btn btn-outline-secondary btn-sm mt-4" @onclick="ClearFilters">
-                    <i class="bi bi-x-lg"></i> Limpiar
+            <div class="col-md-6 col-sm-12 d-flex" style="gap:8px;justify-content:flex-end;">
+                <button class="btn btn-outline-secondary btn-sm" @onclick="ClearFilters" title="Limpiar filtros">
+                    <i class="bi bi-x-lg mr-1"></i> Limpiar
+                </button>
+                <button class="btn btn-principal btn-sm" @onclick="ResetAndLoad">
+                    <i class="bi bi-search mr-1"></i> Consultar
                 </button>
             </div>
         </div>
@@ -80,125 +99,298 @@
                 <p class="mt-2 text-muted" style="font-size:12px;">Cargando...</p>
             </div>
         }
-        else if (pagedResult.Items.Count == 0)
-        {
-            <div class="text-center py-5">
-                <i class="bi bi-inbox" style="font-size:48px;color:#ced4da;display:block;"></i>
-                <p class="mt-2 text-muted">No se encontraron productos con los filtros aplicados.</p>
-            </div>
-        }
         else
         {
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
+            <div class="table-scroll-wrap">
+                <table class="table table-bordered table-hover" style="table-layout:fixed;min-width:800px;width:100%;">
+                    <colgroup>
+                        <col style="width:10%;" />
+                        <col style="width:15%;" />
+                        <col style="width:10%;" />
+                        <col style="width:15%;" />
+                        <col style="width:10%;" />
+                        <col style="width:10%;" />
+                    </colgroup>
                     <thead>
                         <tr>
+                            <th class="text-center">Acciones</th>
                             <th>Nombre</th>
                             <th>SKU</th>
                             <th>Categoría</th>
                             <th class="text-center">Stock</th>
                             <th class="text-right">Precio unit.</th>
-                            <th class="text-center" style="width:130px;">Acciones</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <td></td>
+                            <td>
+                                <input type="text" class="col-filter" placeholder="&#xF52A; Buscar..."
+                                       value="@searchName" @oninput="e => OnColumnInput(e, nameof(searchName))" />
+                            </td>
+                            <td>
+                                <input type="text" class="col-filter" placeholder="&#xF52A; Buscar..."
+                                       value="@searchSku" @oninput="e => OnColumnInput(e, nameof(searchSku))" />
+                            </td>
+                            <td>
+                                <input type="text" class="col-filter" placeholder="&#xF52A; Buscar..."
+                                       value="@searchCategory" @oninput="e => OnColumnInput(e, nameof(searchCategory))" />
+                            </td>
+                            <td>
+                                <input type="text" class="col-filter" style="text-align:center;" placeholder="Buscar..."
+                                       value="@searchStock" @oninput="e => OnColumnInput(e, nameof(searchStock))" />
+                            </td>
+                            <td>
+                                <input type="text" class="col-filter" style="text-align:right;" placeholder="Buscar..."
+                                       value="@searchPrice" @oninput="e => OnColumnInput(e, nameof(searchPrice))" />
+                            </td>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var p in pagedResult.Items)
+                        @if (pagedResult.Items.Count == 0)
                         {
-                            <tr class="@(p.QuantityInStock < 10 ? "row-low-stock" : "")">
-                                <td class="font-weight-500">@p.Name</td>
-                                <td><code style="font-size:11px;color:#24356a;">@p.SKU</code></td>
-                                <td>
-                                    <span class="badge badge-pill badge-light" style="border:1px solid #dee2e6;color:#495057;font-weight:500;">
-                                        @p.Category
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <span>@p.QuantityInStock</span>
-                                    @if (p.QuantityInStock < 10)
-                                    {
-                                        <span class="badge-low-stock ml-1">Bajo</span>
-                                    }
-                                </td>
-                                <td class="text-right font-weight-600">$@p.UnitPrice.ToString("N2")</td>
-                                <td class="text-center">
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-info btn-icon" title="Ver detalle"
-                                                @onclick='() => Navigation.NavigateTo($"/products/{p.Id}")'>
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        <button class="btn btn-outline-primary btn-icon" title="Editar"
-                                                @onclick='() => Navigation.NavigateTo($"/products/{p.Id}/edit")'>
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-outline-danger btn-icon" title="Eliminar"
-                                                @onclick='() => ConfirmDelete(p)'>
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="bi bi-inbox" style="font-size:36px;color:#ced4da;display:block;"></i>
+                                    <span class="text-muted" style="font-size:13px;">No se encontraron productos con los filtros aplicados.</span>
                                 </td>
                             </tr>
                         }
+                        else
+                        {
+                            @foreach (var p in pagedResult.Items)
+                            {
+                                <tr class="@(p.MinStock > 0 && p.QuantityInStock < p.MinStock ? "row-low-stock" : "")">
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-info btn-icon" title="Ver detalle"
+                                                    @onclick='() => Navigation.NavigateTo($"/products/{p.Id}")'>
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success btn-icon" title="Registrar movimiento"
+                                                    @onclick='() => OpenMovementModal(p)'>
+                                                <i class="bi bi-arrow-left-right"></i>
+                                            </button>
+                                            <button class="btn btn-outline-primary btn-icon" title="Editar"
+                                                    @onclick='() => Navigation.NavigateTo($"/products/{p.Id}/edit")'>
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-icon" title="Eliminar"
+                                                    @onclick='() => ConfirmDelete(p)'>
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="font-weight-500">@p.Name</td>
+                                    <td><code style="font-size:11px;color:#24356a;">@p.SKU</code></td>
+                                    <td>
+                                        <span class="badge badge-pill badge-light" style="border:1px solid #dee2e6;color:#495057;font-weight:500;">
+                                            @(string.IsNullOrEmpty(p.CategoryDescription) ? p.CategoryCode : p.CategoryDescription)
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span>@p.QuantityInStock</span>
+                                        @if (p.MinStock > 0 && p.QuantityInStock < p.MinStock)
+                                        {
+                                            <span class="badge-low-stock ml-1">Bajo</span>
+                                        }
+                                    </td>
+                                    <td class="text-right font-weight-600">$@p.UnitPrice.ToString("N2")</td>
+                                </tr>
+                            }
+                        }
                     </tbody>
                 </table>
-            </div>
+            </div><!-- table-scroll-wrap -->
 
+            @if (pagedResult.Items.Count > 0)
+            {
             <div class="pagination-bar">
                 <span class="pagination-info">
                     Mostrando @((currentPage - 1) * pageSize + 1)–@(Math.Min(currentPage * pageSize, pagedResult.TotalCount))
                     de <strong>@pagedResult.TotalCount</strong> productos
                 </span>
-                <nav aria-label="Paginación">
-                    <ul class="pagination pagination-sm mb-0">
-                        <li class="page-item @(!pagedResult.HasPreviousPage ? "disabled" : "")">
-                            <button class="page-link" @onclick="PreviousPage">&laquo;</button>
-                        </li>
-                        @for (var i = 1; i <= pagedResult.TotalPages; i++)
-                        {
-                            var pg = i;
-                            <li class="page-item @(pg == currentPage ? "active" : "")">
-                                <button class="page-link" @onclick="() => GoToPage(pg)">@pg</button>
+                <div class="d-flex align-items-center" style="gap:12px;">
+                    <div class="d-flex align-items-center" style="gap:6px;">
+                        <span style="font-size:12px;color:#6c757d;white-space:nowrap;">Por página:</span>
+                        <select @bind="pageSize" @bind:after="ResetAndLoad"
+                                style="font-size:12px;padding:5px 8px;border:1px solid #dee2e6;border-radius:4px;color:#24356a;font-weight:600;cursor:pointer;background:#fff;outline:none;height:30px;">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                    <nav aria-label="Paginación">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item @(!pagedResult.HasPreviousPage || loading ? "disabled" : "")">
+                                <button class="page-link" @onclick="PreviousPage" disabled="@loading">&laquo;</button>
                             </li>
-                        }
-                        <li class="page-item @(!pagedResult.HasNextPage ? "disabled" : "")">
-                            <button class="page-link" @onclick="NextPage">&raquo;</button>
-                        </li>
-                    </ul>
-                </nav>
+                            @{
+                                var (winStart, winEnd) = GetPageWindow();
+                            }
+                            @if (winStart > 1)
+                            {
+                                <li class="page-item @(loading ? "disabled" : "")">
+                                    <button class="page-link" @onclick='() => GoToPage(1)' disabled="@loading">1</button>
+                                </li>
+                                @if (winStart > 2)
+                                {
+                                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                                }
+                            }
+                            @for (var i = winStart; i <= winEnd; i++)
+                            {
+                                var pg = i;
+                                <li class="page-item @(pg == currentPage ? "active" : loading ? "disabled" : "")">
+                                    <button class="page-link" @onclick="() => GoToPage(pg)" disabled="@loading">@pg</button>
+                                </li>
+                            }
+                            @if (winEnd < pagedResult.TotalPages)
+                            {
+                                @if (winEnd < pagedResult.TotalPages - 1)
+                                {
+                                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                                }
+                                <li class="page-item @(loading ? "disabled" : "")">
+                                    <button class="page-link" @onclick='() => GoToPage(pagedResult.TotalPages)' disabled="@loading">@pagedResult.TotalPages</button>
+                                </li>
+                            }
+                            <li class="page-item @(!pagedResult.HasNextPage || loading ? "disabled" : "")">
+                                <button class="page-link" @onclick="NextPage" disabled="@loading">&raquo;</button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
+            }
         }
     </div>
 </div>
 
+@if (_movementProduct is not null)
+{
+    <div class="modal-backdrop-custom" @onclick="CloseMovementModal"></div>
+    <div class="modal-custom">
+        <div class="modal-custom-header">
+            <span><i class="bi bi-arrow-left-right mr-2"></i>Registrar Movimiento</span>
+            <button class="btn-close-modal" @onclick="CloseMovementModal"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-custom-body">
+            <p style="font-size:13px;margin-bottom:12px;">
+                <strong>@_movementProduct.Name</strong>
+                <code style="margin-left:8px;font-size:11px;color:#24356a;">@_movementProduct.SKU</code>
+                <span style="margin-left:8px;color:#6c757d;">Stock actual: <strong>@_movementProduct.QuantityInStock</strong></span>
+            </p>
+            <EditForm Model="_mov" OnValidSubmit="SubmitMovement">
+                <DataAnnotationsValidator />
+                <div class="row" style="gap:0;row-gap:12px;">
+                    <div class="col-6">
+                        <label class="form-label-sm">Tipo *</label>
+                        <InputSelect class="form-control form-control-sm" @bind-Value="_mov.Type">
+                            <option value="">-- Seleccionar --</option>
+                            <option value="Inbound">Entrada (Inbound)</option>
+                            <option value="Outbound">Salida (Outbound)</option>
+                        </InputSelect>
+                        <ValidationMessage For="() => _mov.Type" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label-sm">Cantidad *</label>
+                        <InputNumber class="form-control form-control-sm" @bind-Value="_mov.Quantity" min="1" />
+                        <ValidationMessage For="() => _mov.Quantity" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label-sm">Motivo</label>
+                        <InputText class="form-control form-control-sm" @bind-Value="_mov.Reason" maxlength="500" placeholder="Opcional" />
+                    </div>
+                </div>
+                @if (_movError is not null)
+                {
+                    <div class="alert alert-danger mt-3 mb-0 py-2" style="font-size:13px;">@_movError</div>
+                }
+                <div class="modal-custom-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="CloseMovementModal">Cancelar</button>
+                    <button type="submit" class="btn btn-principal btn-sm" disabled="@_movLoading">
+                        @if (_movLoading) { <span class="spinner-border spinner-border-sm mr-1"></span> }
+                        Registrar
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
 @code {
     private PagedResult<ProductModel> pagedResult = new();
-    private string categoryFilter = string.Empty;
+    private string searchName = string.Empty;
+    private string searchSku = string.Empty;
+    private string searchCategory = string.Empty;
+    private string searchStock = string.Empty;
+    private string searchPrice = string.Empty;
+    private HashSet<string> _categoryFilters = [];
+    private bool _showCategoryDropdown;
     private bool lowStockOnly;
     private bool loading;
     private int currentPage = 1;
     private int pageSize = 10;
 
-    private static readonly List<string> _categories =
-        ["Computadoras", "Perifericos", "Monitores", "Redes", "Almacenamiento", "Audio", "Impresoras", "Otros"];
+    private List<GeneralValueModel> _categories = [];
+    private CancellationTokenSource? _debounceCts;
+    private int _loadSeq;
 
-    protected override async Task OnInitializedAsync() => await LoadProducts();
+    private ProductModel? _movementProduct;
+    private RegisterMovementRequest _mov = new();
+    private bool _movLoading;
+    private string? _movError;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
-            await JS.InvokeVoidAsync("initSelect2", "categorySelect", "Todas las categorías");
+        _categories = await GeneralValues.GetByTableIdAsync(1001);
+        await LoadProducts();
     }
 
-    private async Task OnCategoryChange(ChangeEventArgs e)
+    private async Task OnColumnInput(ChangeEventArgs e, string field)
     {
-        categoryFilter = e.Value?.ToString() ?? string.Empty;
-        await ResetAndLoad();
+        var value = e.Value?.ToString() ?? string.Empty;
+        switch (field)
+        {
+            case nameof(searchName):     searchName = value;     break;
+            case nameof(searchSku):      searchSku = value;      break;
+            case nameof(searchCategory): searchCategory = value; break;
+            case nameof(searchStock):    searchStock = value;    break;
+            case nameof(searchPrice):    searchPrice = value;    break;
+        }
+
+        _debounceCts?.Cancel();
+        _debounceCts = new CancellationTokenSource();
+        var token = _debounceCts.Token;
+
+        try
+        {
+            await Task.Delay(400, token);
+            currentPage = 1;
+            await LoadProducts();
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private void OnCategoryToggle(string code, bool selected)
+    {
+        if (selected) _categoryFilters.Add(code);
+        else _categoryFilters.Remove(code);
     }
 
     private async Task LoadProducts()
     {
+        var seq = ++_loadSeq;
         loading = true;
-        pagedResult = await Products.GetPagedAsync(categoryFilter, lowStockOnly, 10, currentPage, pageSize);
-        loading = false;
+        var result = await Products.GetPagedAsync(
+            searchName, searchSku, searchCategory, searchStock, searchPrice,
+            _categoryFilters.Count > 0 ? [.. _categoryFilters] : null,
+            lowStockOnly, currentPage, pageSize);
+        if (seq == _loadSeq)
+        {
+            pagedResult = result;
+            loading = false;
+        }
     }
 
     private async Task ResetAndLoad() { currentPage = 1; await LoadProducts(); }
@@ -206,12 +398,54 @@
     private async Task PreviousPage() { if (pagedResult.HasPreviousPage) { currentPage--; await LoadProducts(); } }
     private async Task NextPage() { if (pagedResult.HasNextPage) { currentPage++; await LoadProducts(); } }
 
-    private async Task ClearFilters()
+    private (int Start, int End) GetPageWindow()
     {
-        categoryFilter = string.Empty;
+        const int windowSize = 10;
+        const int half = windowSize / 2;
+        var start = Math.Max(1, currentPage - half);
+        var end = Math.Min(pagedResult.TotalPages, start + windowSize - 1);
+        start = Math.Max(1, end - windowSize + 1);
+        return (start, end);
+    }
+
+    private void ClearFilters()
+    {
+        searchName = string.Empty;
+        searchSku = string.Empty;
+        searchCategory = string.Empty;
+        searchStock = string.Empty;
+        searchPrice = string.Empty;
+        _categoryFilters.Clear();
+        _showCategoryDropdown = false;
         lowStockOnly = false;
-        await JS.InvokeVoidAsync("setSelect2Value", "categorySelect", "");
-        await ResetAndLoad();
+        pageSize = 10;
+    }
+
+    private void OpenMovementModal(ProductModel product)
+    {
+        _movementProduct = product;
+        _mov = new RegisterMovementRequest();
+        _movError = null;
+    }
+
+    private void CloseMovementModal()
+    {
+        _movementProduct = null;
+        _movError = null;
+    }
+
+    private async Task SubmitMovement()
+    {
+        if (_movementProduct is null) return;
+        _movLoading = true;
+        _movError = null;
+        var (_, error) = await Products.RegisterMovementAsync(_movementProduct.Id, _mov);
+        _movLoading = false;
+        if (error is not null) { _movError = error; return; }
+        CloseMovementModal();
+        InventoryEvents.NotifyStockChanged();
+        await JS.InvokeVoidAsync("swalSuccess", "Movimiento registrado", "El movimiento fue registrado correctamente.");
+        await LoadProducts();
     }
 
     private async Task ConfirmDelete(ProductModel product)
@@ -223,7 +457,10 @@
         if (!ok) return;
         var result = await Products.DeleteAsync(product.Id);
         if (result)
+        {
+            await JS.InvokeVoidAsync("swalSuccess", "Producto eliminado", $"'{product.Name}' fue eliminado correctamente.");
             await LoadProducts();
+        }
         else
             await JS.InvokeVoidAsync("swalError", "Error", "No se pudo eliminar el producto.");
     }

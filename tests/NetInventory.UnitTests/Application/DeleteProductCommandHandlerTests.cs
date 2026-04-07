@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using NetInventory.Application.Common;
+using NetInventory.Application.Common.Interfaces;
 using NetInventory.Application.Products.Commands.DeleteProduct;
 using NetInventory.Domain.Common;
 using NetInventory.Domain.Interfaces;
@@ -13,12 +14,14 @@ public sealed class DeleteProductCommandHandlerTests
 {
     private readonly Mock<IProductRepository> _productRepo = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
+    private readonly Mock<ICurrentUserService> _currentUser = new();
 
     private DeleteProductCommandHandler CreateHandler(IEnumerable<IValidator<DeleteProductCommand>>? validators = null)
     {
+        _currentUser.Setup(s => s.GetCurrentUserId()).Returns("owner-1");
         validators ??= BuildValidators();
         var behavior = new ValidationBehavior<DeleteProductCommand>(validators);
-        return new DeleteProductCommandHandler(_productRepo.Object, _unitOfWork.Object, behavior);
+        return new DeleteProductCommandHandler(_productRepo.Object, _unitOfWork.Object, _currentUser.Object, behavior);
     }
 
     private static IEnumerable<IValidator<DeleteProductCommand>> BuildValidators()
@@ -33,7 +36,7 @@ public sealed class DeleteProductCommandHandlerTests
     public async Task HandleAsync_WithExistingProduct_ReturnsSuccess()
     {
         var product = ApplicationTestHelpers.CreateProduct();
-        _productRepo.Setup(r => r.GetByIdAsync(product.Id, It.IsAny<CancellationToken>())).ReturnsAsync(product);
+        _productRepo.Setup(r => r.GetByIdAsync(product.Id, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(product);
         _productRepo.Setup(r => r.DeleteAsync(product, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
@@ -51,7 +54,7 @@ public sealed class DeleteProductCommandHandlerTests
     public async Task HandleAsync_WithNonExistentProduct_ReturnsProductNotFoundError()
     {
         var id = Guid.NewGuid();
-        _productRepo.Setup(r => r.GetByIdAsync(id, It.IsAny<CancellationToken>())).ReturnsAsync((NetInventory.Domain.Entities.Product?)null);
+        _productRepo.Setup(r => r.GetByIdAsync(id, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((NetInventory.Domain.Entities.Product?)null);
 
         var command = new DeleteProductCommand(id);
         var handler = CreateHandler();
@@ -59,7 +62,7 @@ public sealed class DeleteProductCommandHandlerTests
         var result = await handler.HandleAsync(command);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Error.ProductNotFound);
+        result.Error.Should().Be(Error.Product.NotFound);
         _productRepo.Verify(r => r.DeleteAsync(It.IsAny<NetInventory.Domain.Entities.Product>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

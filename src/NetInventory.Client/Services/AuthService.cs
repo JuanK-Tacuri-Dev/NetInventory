@@ -11,7 +11,8 @@ public class AuthService : AuthenticationStateProvider
 {
     private readonly HttpClient _http;
     private readonly IJSRuntime _js;
-    private const string TokenKey = "auth_token";
+
+    private static readonly TimeSpan RefreshThreshold = Constants.Auth.RefreshThreshold;
 
     public AuthService(HttpClient http, IJSRuntime js)
     {
@@ -21,7 +22,21 @@ public class AuthService : AuthenticationStateProvider
 
     public async Task<string?> GetToken()
     {
-        return await _js.InvokeAsync<string?>("localStorage.getItem", TokenKey);
+        var token = await _js.InvokeAsync<string?>("localStorage.getItem", Constants.LocalStorage.TokenKey);
+        if (string.IsNullOrWhiteSpace(token)) return null;
+
+        var expiresAtStr = await _js.InvokeAsync<string?>("localStorage.getItem", Constants.LocalStorage.ExpiresAtKey);
+        if (DateTime.TryParse(expiresAtStr, null, System.Globalization.DateTimeStyles.RoundtripKind, out var expiresAt))
+        {
+            if (DateTime.UtcNow >= expiresAt - RefreshThreshold)
+            {
+                var refreshed = await TryRefreshAsync();
+                if (!refreshed) return null;
+                return await _js.InvokeAsync<string?>("localStorage.getItem", Constants.LocalStorage.TokenKey);
+            }
+        }
+
+        return token;
     }
 
     public async Task<bool> IsAuthenticated()
@@ -32,9 +47,9 @@ public class AuthService : AuthenticationStateProvider
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        var token = await GetToken();
+        var token = await _js.InvokeAsync<string?>("localStorage.getItem", Constants.LocalStorage.TokenKey);
         if (string.IsNullOrWhiteSpace(token))
-            return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+            return Unauthenticated();
 
         var claims = ParseClaimsFromJwt(token);
         var identity = new ClaimsIdentity(claims, "jwt");
@@ -45,13 +60,13 @@ public class AuthService : AuthenticationStateProvider
     {
         try
         {
-            var response = await _http.PostAsJsonAsync("/api/auth/login", request);
+            var response = await _http.PostAsJsonAsync(Constants.Api.Login, request);
             if (!response.IsSuccessStatusCode) return false;
 
             var result = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponse>>();
             if (result is null || !result.Success || result.Data is null) return false;
 
-            await _js.InvokeVoidAsync("localStorage.setItem", TokenKey, result.Data.Token);
+            await SaveTokensAsync(result.Data);
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
             return true;
         }
@@ -61,12 +76,46 @@ public class AuthService : AuthenticationStateProvider
         }
     }
 
-    public async Task<bool> Register(RegisterRequest request)
+    public async Task<string?> Register(RegisterRequest request)
     {
         try
         {
-            var response = await _http.PostAsJsonAsync("/api/auth/register", request);
-            return response.IsSuccessStatusCode;
+            var response = await _http.PostAsJsonAsync(Constants.Api.Register, request);
+            if (response.IsSuccessStatusCode) return null;
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse>();
+            return result?.Error ?? "No se pudo crear la cuenta. Intenta de nuevo.";
+        }
+        catch
+        {
+            return "Error al conectar con el servidor.";
+        }
+    }
+
+    public async Task Logout()
+    {
+        await _js.InvokeVoidAsync("localStorage.removeItem", Constants.LocalStorage.TokenKey);
+        await _js.InvokeVoidAsync("localStorage.removeItem", Constants.LocalStorage.ExpiresAtKey);
+        await _js.InvokeVoidAsync("localStorage.removeItem", Constants.LocalStorage.RefreshTokenKey);
+        NotifyAuthenticationStateChanged(Task.FromResult(Unauthenticated()));
+    }
+
+    public async Task<bool> TryRefreshAsync()
+    {
+        try
+        {
+            var refreshToken = await _js.InvokeAsync<string?>("localStorage.getItem", Constants.LocalStorage.RefreshTokenKey);
+            if (string.IsNullOrWhiteSpace(refreshToken)) return false;
+
+            var response = await _http.PostAsJsonAsync(Constants.Api.Refresh, new { refreshToken });
+            if (!response.IsSuccessStatusCode) { await Logout(); return false; }
+
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponse>>();
+            if (result is null || !result.Success || result.Data is null) { await Logout(); return false; }
+
+            await SaveTokensAsync(result.Data);
+            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+            return true;
         }
         catch
         {
@@ -74,11 +123,16 @@ public class AuthService : AuthenticationStateProvider
         }
     }
 
-    public async Task Logout()
+    private async Task SaveTokensAsync(LoginResponse data)
     {
-        await _js.InvokeVoidAsync("localStorage.removeItem", TokenKey);
-        NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+        await _js.InvokeVoidAsync("localStorage.setItem", Constants.LocalStorage.TokenKey, data.Token);
+        await _js.InvokeVoidAsync("localStorage.setItem", Constants.LocalStorage.ExpiresAtKey, data.ExpiresAt.ToString("O"));
+        if (!string.IsNullOrEmpty(data.RefreshToken))
+            await _js.InvokeVoidAsync("localStorage.setItem", Constants.LocalStorage.RefreshTokenKey, data.RefreshToken);
     }
+
+    private static AuthenticationState Unauthenticated()
+        => new(new ClaimsPrincipal(new ClaimsIdentity()));
 
     private static IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
     {
@@ -111,5 +165,9 @@ public class AuthService : AuthenticationStateProvider
         return Convert.FromBase64String(base64);
     }
 
-    private record LoginResponse(string Token, DateTime ExpiresAt);
+    private record LoginResponse(
+        string Token,
+        DateTime ExpiresAt,
+        string? RefreshToken,
+        DateTime? RefreshTokenExpiresAt);
 }

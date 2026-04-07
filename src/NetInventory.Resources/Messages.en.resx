@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ═══════════════════════════════════════════════════
+       DOMAIN / BUSINESS ERRORS
+       ═══════════════════════════════════════════════════ -->
+  <data name="Error_ProductNotFound" xml:space="preserve">
+    <value>Product not found.</value>
+  </data>
+  <data name="Error_StockNegative" xml:space="preserve">
+    <value>The requested quantity exceeds available stock.</value>
+  </data>
+  <data name="Error_SkuDuplicated" xml:space="preserve">
+    <value>A product with that SKU already exists.</value>
+  </data>
+  <data name="Error_InvalidQuantity" xml:space="preserve">
+    <value>Quantity must be greater than zero.</value>
+  </data>
+  <data name="Error_InvalidCredentials" xml:space="preserve">
+    <value>Invalid credentials.</value>
+  </data>
+  <data name="Error_InvalidRefreshToken" xml:space="preserve">
+    <value>Refresh token is invalid or expired.</value>
+  </data>
+  <data name="Error_UserNotFound" xml:space="preserve">
+    <value>User not found.</value>
+  </data>
+  <data name="Error_NotFound" xml:space="preserve">
+    <value>Resource not found.</value>
+  </data>
+  <data name="Error_Internal" xml:space="preserve">
+    <value>Internal server error.</value>
+  </data>
+  <data name="Error_RegistrationFailed" xml:space="preserve">
+    <value>Failed to register user.</value>
+  </data>
+
+  <!-- ═══════════════════════════════════════════════════
+       VALIDATION — PRODUCTS
+       ═══════════════════════════════════════════════════ -->
+  <data name="Val_Product_NameRequired" xml:space="preserve">
+    <value>Name is required.</value>
+  </data>
+  <data name="Val_Product_NameMaxLength" xml:space="preserve">
+    <value>Name cannot exceed 200 characters.</value>
+  </data>
+  <data name="Val_Product_SkuRequired" xml:space="preserve">
+    <value>SKU is required.</value>
+  </data>
+  <data name="Val_Product_SkuMaxLength" xml:space="preserve">
+    <value>SKU cannot exceed 50 characters.</value>
+  </data>
+  <data name="Val_Product_CategoryTableRequired" xml:space="preserve">
+    <value>Category table is required.</value>
+  </data>
+  <data name="Val_Product_CategoryRequired" xml:space="preserve">
+    <value>Category is required.</value>
+  </data>
+  <data name="Val_Product_CategoryCodeMaxLength" xml:space="preserve">
+    <value>Category code cannot exceed 20 characters.</value>
+  </data>
+  <data name="Val_Product_PriceNotNegative" xml:space="preserve">
+    <value>Price cannot be negative.</value>
+  </data>
+  <data name="Val_Product_IdRequired" xml:space="preserve">
+    <value>Product ID is required.</value>
+  </data>
+
+  <!-- ═══════════════════════════════════════════════════
+       VALIDATION — AUDIT CONFIGURATIONS
+       ═══════════════════════════════════════════════════ -->
+  <data name="Val_AuditConfig_IdRequired" xml:space="preserve">
+    <value>ID is required.</value>
+  </data>
+  <data name="Val_AuditConfig_HttpMethodRequired" xml:space="preserve">
+    <value>HTTP method is required.</value>
+  </data>
+  <data name="Val_AuditConfig_HttpMethodInvalid" xml:space="preserve">
+    <value>Method must be GET, POST, PUT, DELETE, PATCH or * (all).</value>
+  </data>
+  <data name="Val_AuditConfig_UrlPatternRequired" xml:space="preserve">
+    <value>URL pattern is required.</value>
+  </data>
+  <data name="Val_AuditConfig_UrlPatternMaxLength" xml:space="preserve">
+    <value>URL pattern cannot exceed 500 characters.</value>
+  </data>
+  <data name="Val_AuditConfig_UrlPatternStartsWithSlash" xml:space="preserve">
+    <value>URL pattern must start with '/'.</value>
+  </data>
+  <data name="Val_AuditConfig_DescriptionRequired" xml:space="preserve">
+    <value>Description is required.</value>
+  </data>
+  <data name="Val_AuditConfig_DescriptionMaxLength" xml:space="preserve">
+    <value>Description cannot exceed 200 characters.</value>
+  </data>
+
+  <!-- ═══════════════════════════════════════════════════
+       ERRORS — VALUE OBJECTS
+       ═══════════════════════════════════════════════════ -->
+  <data name="Error_SkuEmpty" xml:space="preserve">
+    <value>SKU cannot be empty.</value>
+  </data>
+  <data name="Error_SkuTooLong" xml:space="preserve">
+    <value>SKU cannot exceed 50 characters.</value>
+  </data>
+  <data name="Error_MoneyNegative" xml:space="preserve">
+    <value>Price cannot be negative.</value>
+  </data>
+
+  <!-- ═══════════════════════════════════════════════════
+       ERRORS — AUDIT CONFIGS
+       ═══════════════════════════════════════════════════ -->
+  <data name="Error_AuditConfigNotFound" xml:space="preserve">
+    <value>Audit configuration not found.</value>
+  </data>
+
+  <!-- ═══════════════════════════════════════════════════
+       ERRORS — STOCK MOVEMENTS
+       ═══════════════════════════════════════════════════ -->
+  <data name="Error_InvalidMovementType" xml:space="preserve">
+    <value>Movement type not recognized.</value>
+  </data>
+  <data name="Error_StrategyNotFound" xml:space="preserve">
+    <value>No strategy found for the given movement type.</value>
+  </data>
+
+  <!-- ═══════════════════════════════════════════════════
+       ERRORS — INFRASTRUCTURE / RUNTIME
+       ═══════════════════════════════════════════════════ -->
+  <data name="Error_JwtSecretNotConfigured" xml:space="preserve">
+    <value>JWT Secret is not configured.</value>
+  </data>
+  <data name="Error_FailedResultAccess" xml:space="preserve">
+    <value>Cannot access the value of a failed result.</value>
+  </data>
+  <data name="Diag_DefaultTestError" xml:space="preserve">
+    <value>Test error generated from /api/diagnostics/error.</value>
+  </data>
+
+  <!-- ═══════════════════════════════════════════════════
+       VALIDATION — STOCK MOVEMENTS
+       ═══════════════════════════════════════════════════ -->
+  <data name="Val_Movement_ProductIdRequired" xml:space="preserve">
+    <value>Product ID is required.</value>
+  </data>
+  <data name="Val_Movement_TypeRequired" xml:space="preserve">
+    <value>Movement type is required.</value>
+  </data>
+  <data name="Val_Movement_TypeInvalid" xml:space="preserve">
+    <value>Movement type must be 'Inbound' or 'Outbound'.</value>
+  </data>
+  <data name="Val_Movement_QuantityGreaterThanZero" xml:space="preserve">
+    <value>Quantity must be greater than zero.</value>
+  </data>
+
+</root>

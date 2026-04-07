@@ -1,0 +1,143 @@
+@inject ProductService Products
+@inject GeneralValueService GeneralValues
+@inject InventoryEventService InventoryEvents
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<div class="notif-wrap">
+    <button class="btn-topbar notif-btn" title="Notificaciones de stock" @onclick="ToggleDropdown">
+        <i class="bi bi-bell"></i>
+        @if (UnseenCount > 0)
+        {
+            <span class="notif-badge">@(UnseenCount > 99 ? "99+" : UnseenCount.ToString())</span>
+        }
+    </button>
+
+    @if (_open)
+    {
+        <div class="notif-overlay" @onclick="Close"></div>
+        <div class="notif-panel">
+            <div class="notif-header">
+                <span><i class="bi bi-exclamation-triangle mr-1" style="color:#f1b44c;"></i>Stock bajo</span>
+                <span class="notif-count">@_lowStockItems.Count producto@(_lowStockItems.Count != 1 ? "s" : "")</span>
+            </div>
+
+            @if (_loading)
+            {
+                <div class="notif-empty">
+                    <div class="spinner-border spinner-border-sm" style="color:#24356a;"></div>
+                </div>
+            }
+            else if (_lowStockItems.Count == 0)
+            {
+                <div class="notif-empty">
+                    <i class="bi bi-check-circle" style="font-size:28px;color:#34c38f;display:block;margin-bottom:6px;"></i>
+                    <span>Todos los productos tienen stock suficiente</span>
+                </div>
+            }
+            else
+            {
+                <div class="notif-list">
+                    @foreach (var p in _lowStockItems)
+                    {
+                        <div class="notif-item" @onclick='() => GoToProduct(p.Id)'>
+                            <div class="notif-item-info">
+                                <span class="notif-item-name">@p.Name</span>
+                                <code class="notif-item-sku">@p.SKU</code>
+                            </div>
+                            <span class="notif-item-stock @(p.QuantityInStock == 0 ? "notif-stock-zero" : "notif-stock-low")">
+                                @p.QuantityInStock uds.
+                            </span>
+                        </div>
+                    }
+                </div>
+                <div class="notif-footer" @onclick='() => { Close(); Navigation.NavigateTo("/products?lowStock=true"); }'>
+                    <i class="bi bi-arrow-right mr-1"></i> Ver todos en Productos
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<ProductModel> _lowStockItems = [];
+    private HashSet<Guid> _seenIds = [];
+    private bool _open;
+    private bool _loading;
+    private PeriodicTimer? _timer;
+    private CancellationTokenSource _cts = new();
+
+    private int UnseenCount => _lowStockItems.Count(p => !_seenIds.Contains(p.Id));
+
+    protected override async Task OnInitializedAsync()
+    {
+        InventoryEvents.OnStockChanged += OnStockChanged;
+        await LoadAsync();
+        var interval = await GetPollIntervalAsync();
+        _timer = new PeriodicTimer(interval);
+        _ = RefreshLoopAsync();
+    }
+
+    private void OnStockChanged()
+    {
+        _ = InvokeAsync(async () =>
+        {
+            await LoadAsync();
+            StateHasChanged();
+        });
+    }
+
+    private async Task<TimeSpan> GetPollIntervalAsync()
+    {
+        var values = await GeneralValues.GetByTableIdAsync(1002);
+        var raw = values.FirstOrDefault(v => v.Code == "NOTIFICATION_POLL_MINUTES")?.Value;
+        return int.TryParse(raw, out var minutes) && minutes > 0
+            ? TimeSpan.FromMinutes(minutes)
+            : TimeSpan.FromMinutes(5);
+    }
+
+    private async Task RefreshLoopAsync()
+    {
+        try
+        {
+            while (await _timer!.WaitForNextTickAsync(_cts.Token))
+            {
+                await LoadAsync();
+                StateHasChanged();
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _lowStockItems = await Products.GetAllAsync(lowStockOnly: true);
+        _loading = false;
+    }
+
+    private void ToggleDropdown()
+    {
+        _open = !_open;
+        if (_open)
+            foreach (var p in _lowStockItems)
+                _seenIds.Add(p.Id);
+    }
+
+    private void Close() => _open = false;
+
+    private void GoToProduct(Guid id)
+    {
+        Close();
+        Navigation.NavigateTo($"/products/{id}");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        InventoryEvents.OnStockChanged -= OnStockChanged;
+        _cts.Cancel();
+        _cts.Dispose();
+        _timer?.Dispose();
+        await Task.CompletedTask;
+    }
+}

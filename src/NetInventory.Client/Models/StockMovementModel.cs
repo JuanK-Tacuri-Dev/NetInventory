@@ -6,6 +6,7 @@ public class StockMovementModel
     public Guid ProductId { get; set; }
     public string Type { get; set; } = string.Empty;
     public int Quantity { get; set; }
+    public string? Reason { get; set; }
     public DateTime Timestamp { get; set; }
     public string? CreatedBy { get; set; }
 }

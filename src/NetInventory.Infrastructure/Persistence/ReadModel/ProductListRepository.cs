@@ -9,9 +9,14 @@ namespace NetInventory.Infrastructure.Persistence.ReadModel;
 public sealed class ProductListRepository(IDbConnection connection) : IProductListRepository
 {
     public async Task<PagedResult<ProductListItem>> GetPagedAsync(
-        string? category,
+        string ownerId,
+        string? searchName,
+        string? searchSku,
+        string? searchCategory,
+        string? searchStock,
+        string? searchPrice,
+        string[] categoryCodes,
         bool lowStockOnly,
-        int threshold,
         int page,
         int pageSize,
         CancellationToken ct = default)
@@ -19,22 +24,50 @@ public sealed class ProductListRepository(IDbConnection connection) : IProductLi
         var offset = (page - 1) * pageSize;
         var isSqlite = connection is SqliteConnection;
 
-        var conditions = new List<string>();
+        var conditions = new List<string> { "OwnerId = @ownerId" };
         var parameters = new DynamicParameters();
+        parameters.Add("ownerId", ownerId);
 
-        if (!string.IsNullOrWhiteSpace(category))
+        if (!string.IsNullOrWhiteSpace(searchName))
         {
-            conditions.Add("Category = @category");
-            parameters.Add("category", category);
+            conditions.Add("Name LIKE @searchName");
+            parameters.Add("searchName", $"%{searchName}%");
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchSku))
+        {
+            conditions.Add("SKU LIKE @searchSku");
+            parameters.Add("searchSku", $"%{searchSku}%");
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchCategory))
+        {
+            conditions.Add("CategoryDescription LIKE @searchCategory");
+            parameters.Add("searchCategory", $"%{searchCategory}%");
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchStock))
+        {
+            conditions.Add("CAST(QuantityInStock AS TEXT) LIKE @searchStock");
+            parameters.Add("searchStock", $"%{searchStock}%");
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchPrice))
+        {
+            conditions.Add("CAST(UnitPrice AS TEXT) LIKE @searchPrice");
+            parameters.Add("searchPrice", $"%{searchPrice}%");
+        }
+
+        if (categoryCodes.Length > 0)
+        {
+            conditions.Add("CategoryCode IN @categoryCodes");
+            parameters.Add("categoryCodes", categoryCodes);
         }
 
         if (lowStockOnly)
-        {
-            conditions.Add("QuantityInStock < @threshold");
-            parameters.Add("threshold", threshold);
-        }
+            conditions.Add("QuantityInStock < MinStock");
 
-        var where = conditions.Count > 0 ? "WHERE " + string.Join(" AND ", conditions) : string.Empty;
+        var where = "WHERE " + string.Join(" AND ", conditions);
 
         var countSql = $"SELECT COUNT(*) FROM vw_Products {where}";
 

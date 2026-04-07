@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ═══════════════════════════════════════════════════
+       ERRORES DE DOMINIO / NEGOCIO
+       ═══════════════════════════════════════════════════ -->
+  <data name="Error_ProductNotFound" xml:space="preserve">
+    <value>El producto no existe.</value>
+  </data>
+  <data name="Error_StockNegative" xml:space="preserve">
+    <value>La cantidad solicitada supera el stock disponible.</value>
+  </data>
+  <data name="Error_SkuDuplicated" xml:space="preserve">
+    <value>Ya existe un producto con ese SKU.</value>
+  </data>
+  <data name="Error_InvalidQuantity" xml:space="preserve">
+    <value>La cantidad debe ser mayor a cero.</value>
+  </data>
+  <data name="Error_InvalidCredentials" xml:space="preserve">
+    <value>Credenciales inválidas.</value>
+  </data>
+  <data name="Error_InvalidRefreshToken" xml:space="preserve">
+    <value>Refresh token inválido o expirado.</value>
+  </data>
+  <data name="Error_UserNotFound" xml:space="preserve">
+    <value>Usuario no encontrado.</value>
+  </data>
+  <data name="Error_NotFound" xml:space="preserve">
+    <value>Recurso no encontrado.</value>
+  </data>
+  <data name="Error_Internal" xml:space="preserve">
+    <value>Error interno del servidor.</value>
+  </data>
+  <data name="Error_RegistrationFailed" xml:space="preserve">
+    <value>Error al registrar el usuario.</value>
+  </data>
+
+  <!-- ═══════════════════════════════════════════════════
+       VALIDACIONES — PRODUCTOS
+       ═══════════════════════════════════════════════════ -->
+  <data name="Val_Product_NameRequired" xml:space="preserve">
+    <value>El nombre es obligatorio.</value>
+  </data>
+  <data name="Val_Product_NameMaxLength" xml:space="preserve">
+    <value>El nombre no puede superar 200 caracteres.</value>
+  </data>
+  <data name="Val_Product_SkuRequired" xml:space="preserve">
+    <value>El SKU es obligatorio.</value>
+  </data>
+  <data name="Val_Product_SkuMaxLength" xml:space="preserve">
+    <value>El SKU no puede superar 50 caracteres.</value>
+  </data>
+  <data name="Val_Product_CategoryTableRequired" xml:space="preserve">
+    <value>La tabla de categoría es obligatoria.</value>
+  </data>
+  <data name="Val_Product_CategoryRequired" xml:space="preserve">
+    <value>La categoría es obligatoria.</value>
+  </data>
+  <data name="Val_Product_CategoryCodeMaxLength" xml:space="preserve">
+    <value>El código de categoría no puede superar 20 caracteres.</value>
+  </data>
+  <data name="Val_Product_PriceNotNegative" xml:space="preserve">
+    <value>El precio no puede ser negativo.</value>
+  </data>
+  <data name="Val_Product_IdRequired" xml:space="preserve">
+    <value>El ID del producto es obligatorio.</value>
+  </data>
+
+  <!-- ═══════════════════════════════════════════════════
+       VALIDACIONES — CONFIGURACIONES DE AUDITORÍA
+       ═══════════════════════════════════════════════════ -->
+  <data name="Val_AuditConfig_IdRequired" xml:space="preserve">
+    <value>El ID es obligatorio.</value>
+  </data>
+  <data name="Val_AuditConfig_HttpMethodRequired" xml:space="preserve">
+    <value>El método HTTP es obligatorio.</value>
+  </data>
+  <data name="Val_AuditConfig_HttpMethodInvalid" xml:space="preserve">
+    <value>El método debe ser GET, POST, PUT, DELETE, PATCH o * (todos).</value>
+  </data>
+  <data name="Val_AuditConfig_UrlPatternRequired" xml:space="preserve">
+    <value>El patrón de URL es obligatorio.</value>
+  </data>
+  <data name="Val_AuditConfig_UrlPatternMaxLength" xml:space="preserve">
+    <value>El patrón no puede superar 500 caracteres.</value>
+  </data>
+  <data name="Val_AuditConfig_UrlPatternStartsWithSlash" xml:space="preserve">
+    <value>El patrón debe comenzar con '/'.</value>
+  </data>
+  <data name="Val_AuditConfig_DescriptionRequired" xml:space="preserve">
+    <value>La descripción es obligatoria.</value>
+  </data>
+  <data name="Val_AuditConfig_DescriptionMaxLength" xml:space="preserve">
+    <value>La descripción no puede superar 200 caracteres.</value>
+  </data>
+
+  <!-- ═══════════════════════════════════════════════════
+       ERRORES — VALUE OBJECTS
+       ═══════════════════════════════════════════════════ -->
+  <data name="Error_SkuEmpty" xml:space="preserve">
+    <value>El SKU no puede estar vacío.</value>
+  </data>
+  <data name="Error_SkuTooLong" xml:space="preserve">
+    <value>El SKU no puede superar los 50 caracteres.</value>
+  </data>
+  <data name="Error_MoneyNegative" xml:space="preserve">
+    <value>El precio no puede ser negativo.</value>
+  </data>
+
+  <!-- ═══════════════════════════════════════════════════
+       ERRORES — AUDIT CONFIGS
+       ═══════════════════════════════════════════════════ -->
+  <data name="Error_AuditConfigNotFound" xml:space="preserve">
+    <value>Configuración de auditoría no encontrada.</value>
+  </data>
+
+  <!-- ═══════════════════════════════════════════════════
+       ERRORES — MOVIMIENTOS DE STOCK
+       ═══════════════════════════════════════════════════ -->
+  <data name="Error_InvalidMovementType" xml:space="preserve">
+    <value>Tipo de movimiento no reconocido.</value>
+  </data>
+  <data name="Error_StrategyNotFound" xml:space="preserve">
+    <value>No existe estrategia para el tipo de movimiento.</value>
+  </data>
+
+  <!-- ═══════════════════════════════════════════════════
+       ERRORES — INFRAESTRUCTURA / RUNTIME
+       ═══════════════════════════════════════════════════ -->
+  <data name="Error_JwtSecretNotConfigured" xml:space="preserve">
+    <value>JWT Secret no está configurado.</value>
+  </data>
+  <data name="Error_FailedResultAccess" xml:space="preserve">
+    <value>No se puede acceder al valor de un resultado fallido.</value>
+  </data>
+  <data name="Diag_DefaultTestError" xml:space="preserve">
+    <value>Error de prueba generado desde /api/diagnostics/error.</value>
+  </data>
+
+  <!-- ═══════════════════════════════════════════════════
+       VALIDACIONES — MOVIMIENTOS DE STOCK
+       ═══════════════════════════════════════════════════ -->
+  <data name="Val_Movement_ProductIdRequired" xml:space="preserve">
+    <value>El ID del producto es obligatorio.</value>
+  </data>
+  <data name="Val_Movement_TypeRequired" xml:space="preserve">
+    <value>El tipo de movimiento es obligatorio.</value>
+  </data>
+  <data name="Val_Movement_TypeInvalid" xml:space="preserve">
+    <value>El tipo de movimiento debe ser 'Inbound' o 'Outbound'.</value>
+  </data>
+  <data name="Val_Movement_QuantityGreaterThanZero" xml:space="preserve">
+    <value>La cantidad debe ser mayor a cero.</value>
+  </data>
+
+</root>

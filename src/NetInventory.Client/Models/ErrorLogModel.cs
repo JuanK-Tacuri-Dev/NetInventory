@@ -3,6 +3,7 @@ namespace NetInventory.Client.Models;
 public sealed class ErrorLogModel
 {
     public Guid Id { get; set; }
+    public string ReferenceCode { get; set; } = string.Empty;
     public string CorrelationId { get; set; } = string.Empty;
     public string ExceptionType { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;

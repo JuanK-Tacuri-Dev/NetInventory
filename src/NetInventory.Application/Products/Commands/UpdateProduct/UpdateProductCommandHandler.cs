@@ -11,6 +11,7 @@ public sealed class UpdateProductCommandHandler(
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUserService,
     ValidationBehavior<UpdateProductCommand> validator)
+    : ICommandHandler<UpdateProductCommand, Result>
 {
     public async Task<Result> HandleAsync(UpdateProductCommand command, CancellationToken ct = default)
     {
@@ -18,16 +19,17 @@ public sealed class UpdateProductCommandHandler(
         if (validation.IsFailure)
             return validation;
 
-        var product = await productRepository.GetByIdAsync(command.Id, ct);
+        var ownerId = currentUserService.GetCurrentUserId();
+        var product = await productRepository.GetByIdAsync(command.Id, ownerId, ct);
         if (product is null)
-            return Result.Failure(Error.ProductNotFound);
+            return Result.Failure(Error.Product.NotFound);
 
         var moneyResult = Money.Create(command.UnitPrice);
         if (moneyResult.IsFailure)
             return Result.Failure(moneyResult.Error);
 
         var currentUser = currentUserService.GetCurrentUser();
-        product.Update(command.Name, command.Category, moneyResult.Value, currentUser);
+        product.Update(command.Name, command.CategoryTableId, command.CategoryCode, moneyResult.Value, command.MinStock, command.MaxStock, currentUser);
 
         await productRepository.UpdateAsync(product, ct);
         await unitOfWork.SaveChangesAsync(ct);

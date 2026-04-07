@@ -18,13 +18,17 @@ builder.Host.UseSerilog((ctx, cfg) => cfg
     .WriteTo.Console()
     .WriteTo.File("logs/inventory-.log", rollingInterval: RollingInterval.Day));
 
+builder.Services.AddMemoryCache();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+
 var jwtSecret = jwtSettings["Secret"];
+
 if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.StartsWith("#{"))
     throw new InvalidOperationException("JwtSettings:Secret no está configurado. Define la variable de entorno JwtSettings__Secret antes de iniciar la aplicación.");
+
 builder.Services
     .AddAuthentication(options =>
     {
@@ -55,11 +59,12 @@ builder.Services.AddSwaggerWithJwt();
 
 builder.Services.AddCors(o =>
 {
-    o.AddPolicy("Dev", p => p
-        .WithOrigins("https://localhost:5002", "http://localhost:5002", "http://localhost:8080")
+    o.AddPolicy(NetInventory.Api.Constants.Cors.Dev, p => p
+        .SetIsOriginAllowed(_ => true)
         .AllowAnyHeader()
         .AllowAnyMethod());
-    o.AddPolicy("Prod", p => p
+
+    o.AddPolicy(NetInventory.Api.Constants.Cors.Prod, p => p
         .WithOrigins(builder.Configuration["AllowedOrigins"] ?? "http://localhost:8080")
         .AllowAnyHeader()
         .AllowAnyMethod());
@@ -71,11 +76,13 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
+    await NetInventory.Infrastructure.Persistence.DbSeeder.SeedAsync(db);
 }
 
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<AuditMiddleware>();
 app.UseMiddleware<GlobalExceptionMiddleware>();
-app.UseCors(app.Environment.IsDevelopment() ? "Dev" : "Prod");
+app.UseCors(app.Environment.IsDevelopment() ? NetInventory.Api.Constants.Cors.Dev : NetInventory.Api.Constants.Cors.Prod);
 
 if (app.Environment.IsDevelopment())
 {

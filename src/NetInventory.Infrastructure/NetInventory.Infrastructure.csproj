@@ -3,9 +3,11 @@
   <ItemGroup>
     <ProjectReference Include="..\NetInventory.Domain\NetInventory.Domain.csproj" />
     <ProjectReference Include="..\NetInventory.Application\NetInventory.Application.csproj" />
+    <ProjectReference Include="..\NetInventory.Resources\NetInventory.Resources.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Mapster" Version="10.0.6" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.*">

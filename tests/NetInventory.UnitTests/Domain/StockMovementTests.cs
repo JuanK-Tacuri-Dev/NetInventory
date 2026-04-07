@@ -11,7 +11,7 @@ public class StockMovementTests
     {
         var productId = Guid.NewGuid();
 
-        var movement = StockMovement.Create(productId, MovementType.Inbound, 50, "warehouse");
+        var movement = StockMovement.Create(productId, MovementType.Inbound, 50, null, "warehouse");
 
         movement.Id.Should().NotBe(Guid.Empty);
         movement.ProductId.Should().Be(productId);
@@ -25,7 +25,7 @@ public class StockMovementTests
     {
         var before = DateTime.UtcNow;
 
-        var movement = StockMovement.Create(Guid.NewGuid(), MovementType.Outbound, 10, "sales");
+        var movement = StockMovement.Create(Guid.NewGuid(), MovementType.Outbound, 10, null, "sales");
 
         var after = DateTime.UtcNow;
 
@@ -35,7 +35,7 @@ public class StockMovementTests
     [Fact]
     public void Create_SetsCreatedByCorrectly()
     {
-        var movement = StockMovement.Create(Guid.NewGuid(), MovementType.Inbound, 5, "admin");
+        var movement = StockMovement.Create(Guid.NewGuid(), MovementType.Inbound, 5, null, "admin");
 
         movement.CreatedBy.Should().Be("admin");
     }

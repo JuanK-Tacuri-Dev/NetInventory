@@ -18,6 +18,10 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthService>());
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<GeneralValueService>();
 builder.Services.AddScoped<ErrorLogService>();
+builder.Services.AddScoped<AuditLogService>();
+builder.Services.AddScoped<AuditConfigService>();
+builder.Services.AddScoped<InventoryEventService>();
 
 await builder.Build().RunAsync();

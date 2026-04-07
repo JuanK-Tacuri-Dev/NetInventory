@@ -1,0 +1,293 @@
+@page "/audit-logs"
+@attribute [Authorize]
+@inject AuditLogService AuditLogSvc
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<PageTitle>Solicitudes HTTP - NetInventory</PageTitle>
+
+<div class="page-title-box">
+    <h4><i class="bi bi-journal-text mr-2"></i>Solicitudes HTTP</h4>
+    <button class="btn btn-outline-primary btn-sm" @onclick="Reload" disabled="@loading">
+        <i class="bi bi-arrow-clockwise mr-1"></i> Actualizar
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="card-title d-flex align-items-center justify-content-between">
+            <span>Registro de peticiones auditadas</span>
+            @if (pagedResult is not null)
+            {
+                <span class="badge badge-pill badge-primary" style="font-size:11px;font-weight:600;">
+                    @pagedResult.TotalCount registros
+                </span>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(filterCorrelationId))
+        {
+            <div class="alert alert-info d-flex align-items-center justify-content-between" style="font-size:12px;">
+                <span><i class="bi bi-funnel mr-1"></i> Filtrando por CorrelationId: <strong>@filterCorrelationId</strong></span>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="ClearFilter">
+                    <i class="bi bi-x"></i> Limpiar filtro
+                </button>
+            </div>
+        }
+
+        @if (loading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border" style="color:#24356a;" role="status"></div>
+                <p class="mt-2 text-muted" style="font-size:12px;">Cargando registros...</p>
+            </div>
+        }
+        else if (displayedLogs.Count == 0)
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-journal-x" style="font-size:48px;color:#74788d;display:block;"></i>
+                <p class="mt-2 text-muted">No hay solicitudes HTTP auditadas.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table id="audit-logs-table" class="table table-bordered table-hover" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width:80px;">Detalle</th>
+                            <th style="width:160px;">Fecha</th>
+                            <th style="width:80px;">Método</th>
+                            <th>Path</th>
+                            <th style="width:70px;">Status</th>
+                            <th style="width:90px;">Duración</th>
+                            <th style="width:160px;">Usuario</th>
+                            <th style="width:120px;">Correlation ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in displayedLogs)
+                        {
+                            <tr>
+                                <td class="text-center">
+                                    <button class="btn btn-outline-info btn-sm btn-icon"
+                                            title="Ver detalle"
+                                            @onclick="() => ShowDetail(log)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </td>
+                                <td>@log.OccurredAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td>
+                                    <span class="badge badge-pill" style="font-size:10px;font-weight:700;background:@GetMethodColor(log.Method);color:#fff;">
+                                        @log.Method
+                                    </span>
+                                </td>
+                                <td>
+                                    <code style="font-size:11px;">@log.Path</code>
+                                    @if (!string.IsNullOrEmpty(log.QueryString))
+                                    {
+                                        <span style="font-size:10px;color:#74788d;">@log.QueryString</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge badge-pill" style="font-size:10px;font-weight:700;background:@GetStatusColor(log.StatusCode);color:#fff;">
+                                        @log.StatusCode
+                                    </span>
+                                </td>
+                                <td style="font-size:11px;">@log.DurationMs ms</td>
+                                <td style="font-size:11px;color:#74788d;">
+                                    @(string.IsNullOrEmpty(log.UserEmail) ? "—" : log.UserEmail)
+                                </td>
+                                <td>
+                                    <code style="font-size:10px;color:#74788d;">
+                                        @log.CorrelationId[..Math.Min(12, log.CorrelationId.Length)]
+                                    </code>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!string.IsNullOrEmpty(filterCorrelationId) && pagedResult is not null && pagedResult.TotalCount > 0)
+            {
+                <div class="d-flex justify-content-end mt-3" style="gap:8px;">
+                    <button class="btn btn-outline-secondary btn-sm" disabled="@(pagedResult.HasPreviousPage == false)" @onclick="PrevPage">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <span style="font-size:12px;line-height:30px;">Página @currentPage / @pagedResult.TotalPages</span>
+                    <button class="btn btn-outline-secondary btn-sm" disabled="@(pagedResult.HasNextPage == false)" @onclick="NextPage">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "correlationId")]
+    public string? QueryCorrelationId { get; set; }
+
+    private List<AuditLogModel> displayedLogs = [];
+    private PagedResult<AuditLogModel>? pagedResult;
+    private bool loading;
+    private bool tableInitialized;
+    private string? filterCorrelationId;
+    private int currentPage = 1;
+    private const int PageSize = 50;
+
+    protected override async Task OnInitializedAsync()
+    {
+        filterCorrelationId = QueryCorrelationId;
+        await Reload();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!loading && displayedLogs.Count > 0 && !tableInitialized)
+        {
+            tableInitialized = true;
+            await JS.InvokeVoidAsync("initDataTable", "audit-logs-table", new[] { new[] { "0", "desc" } });
+        }
+    }
+
+    private async Task Reload()
+    {
+        loading = true;
+        tableInitialized = false;
+
+        if (!string.IsNullOrEmpty(filterCorrelationId))
+        {
+            var single = await AuditLogSvc.GetByCorrelationIdAsync(filterCorrelationId);
+            displayedLogs = single is null ? [] : [single];
+            pagedResult = null;
+        }
+        else
+        {
+            pagedResult = await AuditLogSvc.GetPagedAsync(currentPage, PageSize);
+            displayedLogs = pagedResult?.Items ?? [];
+        }
+
+        loading = false;
+    }
+
+    private void ClearFilter()
+    {
+        filterCorrelationId = null;
+        currentPage = 1;
+        Navigation.NavigateTo("/audit-logs");
+        _ = Reload();
+    }
+
+    private async Task PrevPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            await Reload();
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (pagedResult?.HasNextPage == true)
+        {
+            currentPage++;
+            await Reload();
+        }
+    }
+
+    private static string FormatBody(string? body)
+    {
+        if (string.IsNullOrEmpty(body))
+            return "<em style='color:#74788d;'>Sin cuerpo</em>";
+
+        string formatted;
+        try
+        {
+            var doc = System.Text.Json.JsonDocument.Parse(body);
+            formatted = System.Text.Json.JsonSerializer.Serialize(
+                doc.RootElement,
+                new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            formatted = body;
+        }
+
+        return $"<pre style='text-align:left;font-size:11px;max-height:220px;overflow:auto;background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:4px;margin:0;'>{System.Net.WebUtility.HtmlEncode(formatted)}</pre>";
+    }
+
+    private static string FormatQueryParams(string? queryString)
+    {
+        if (string.IsNullOrEmpty(queryString))
+            return "<em style='color:#74788d;'>Sin parámetros</em>";
+
+        var qs = queryString.TrimStart('?');
+        var pairs = qs.Split('&', StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p.Split('=', 2))
+            .Where(p => p.Length == 2)
+            .Select(p => new { Key = Uri.UnescapeDataString(p[0]), Value = Uri.UnescapeDataString(p[1]) })
+            .ToList();
+
+        if (pairs.Count == 0)
+            return "<em style='color:#74788d;'>Sin parámetros</em>";
+
+        var rows = string.Join("", pairs.Select(p =>
+            $"<tr><td style='padding:3px 10px 3px 0;color:#9cdcfe;white-space:nowrap;'>{System.Net.WebUtility.HtmlEncode(p.Key)}</td>"
+            + $"<td style='padding:3px 0;color:#ce9178;'>{System.Net.WebUtility.HtmlEncode(p.Value)}</td></tr>"));
+
+        return $"<div style='background:#1e1e1e;border-radius:4px;padding:10px 14px;max-height:220px;overflow:auto;'>"
+             + $"<table style='font-size:11px;font-family:monospace;border-collapse:collapse;'>{rows}</table>"
+             + "</div>";
+    }
+
+    private async Task ShowDetail(AuditLogModel log)
+    {
+        var isGet = log.Method.Equals("GET", StringComparison.OrdinalIgnoreCase);
+
+        var reqLabel = isGet ? "Query Parameters:" : "Request Body:";
+        var reqHtml  = isGet ? FormatQueryParams(log.QueryString) : FormatBody(log.RequestBody);
+        var resHtml  = FormatBody(log.ResponseBody);
+
+        var usuario = string.IsNullOrEmpty(log.UserEmail) ? "&mdash;" : log.UserEmail;
+        var qs = !string.IsNullOrEmpty(log.QueryString) ? $"<span style='color:#74788d;font-size:11px;'>{System.Net.WebUtility.HtmlEncode(log.QueryString)}</span>" : "";
+
+        var htmlBody = "<div style='text-align:left;font-size:12px;'>"
+            + $"<p><strong>CorrelationId:</strong> <code>{log.CorrelationId}</code></p>"
+            + $"<p><strong>Status:</strong> {log.StatusCode} &nbsp; <strong>Dur&aacute;ci&oacute;n:</strong> {log.DurationMs} ms</p>"
+            + $"<p><strong>Usuario:</strong> {usuario}</p>"
+            + (!isGet && !string.IsNullOrEmpty(log.QueryString) ? $"<p><strong>Query String:</strong> {qs}</p>" : "")
+            + "<hr/>"
+            + $"<p><strong>{reqLabel}</strong></p>" + reqHtml
+            + "<p style='margin-top:12px;'><strong>Response Body:</strong></p>" + resHtml
+            + "</div>";
+
+        await JS.InvokeVoidAsync("Swal.fire", new
+        {
+            title = $"{log.Method} {log.Path}",
+            html = htmlBody,
+            width = "860px",
+            confirmButtonColor = "#24356a",
+            confirmButtonText = "Cerrar"
+        });
+    }
+
+    private static string GetMethodColor(string method) => method switch
+    {
+        "GET"    => "#50a5f1",
+        "POST"   => "#34c38f",
+        "PUT"    => "#f1b44c",
+        "DELETE" => "#f46a6a",
+        _        => "#74788d"
+    };
+
+    private static string GetStatusColor(int status) => status switch
+    {
+        >= 200 and < 300 => "#34c38f",
+        >= 300 and < 400 => "#50a5f1",
+        >= 400 and < 500 => "#f1b44c",
+        _                => "#f46a6a"
+    };
+}

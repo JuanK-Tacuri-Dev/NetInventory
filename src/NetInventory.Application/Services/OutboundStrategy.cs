@@ -11,7 +11,7 @@ public sealed class OutboundStrategy : IMovementStrategy
     public Result Apply(Product product, int quantity)
     {
         if (product.QuantityInStock - quantity < 0)
-            return Result.Failure(Error.StockNegative);
+            return Result.Failure(Error.Stock.Negative);
 
         return product.ApplyMovement(quantity, MovementType.Outbound);
     }

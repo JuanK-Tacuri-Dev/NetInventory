@@ -6,8 +6,11 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NetInventory.Application.Auth;
+using NetInventory.Application.Common;
 using NetInventory.Application.Common.Interfaces;
 using NetInventory.Domain.Interfaces;
+using NetInventory.Infrastructure.HostedServices;
 using NetInventory.Infrastructure.Persistence;
 using NetInventory.Infrastructure.Persistence.ReadModel;
 using NetInventory.Infrastructure.Persistence.Repositories;
@@ -27,9 +30,9 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(options =>
         {
             if (connectionString.Contains(".db"))
-                options.UseSqlite(connectionString);
+                options.UseSqlite(connectionString).EnableSensitiveDataLogging();
             else
-                options.UseSqlServer(connectionString);
+                options.UseSqlServer(connectionString).EnableSensitiveDataLogging();
         });
 
         services.AddIdentity<IdentityUser, IdentityRole>(options =>
@@ -54,6 +57,9 @@ public static class DependencyInjection
             {
                 var conn = new SqliteConnection(connectionString);
                 conn.Open();
+                using var wal = conn.CreateCommand();
+                wal.CommandText = "PRAGMA journal_mode=WAL;";
+                wal.ExecuteNonQuery();
                 return conn;
             }
             else
@@ -68,11 +74,25 @@ public static class DependencyInjection
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IStockMovementRepository, StockMovementRepository>();
         services.AddScoped<IErrorLogRepository, ErrorLogRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<IAuditConfigRepository, AuditConfigRepository>();
+        services.AddScoped<IGeneralTableRepository, GeneralTableRepository>();
+        services.AddScoped<IGeneralValueRepository, GeneralValueRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IDispatcher, Dispatcher>();
+        services.AddSingleton<IAuditConfigCache, AuditConfigCache>();
+        services.AddSingleton<ICacheService, CacheService>();
+        var cacheSettings = configuration.GetSection("CacheSettings").Get<CacheSettings>() ?? new CacheSettings();
+        services.AddSingleton(cacheSettings);
         services.AddHostedService<LowStockBackgroundService>();
+        services.AddHostedService<GeneralValuesCacheWarmupService>();
         services.AddHttpContextAccessor();
 
         return services;
     }
+
 }

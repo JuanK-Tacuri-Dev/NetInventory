@@ -1,8 +1,16 @@
+using NetInventory.Application.Common;
+using NetInventory.Application.Common.DTOs;
+using NetInventory.Domain.Common;
+
 namespace NetInventory.Application.Products.Queries.GetProductsPaged;
 
 public sealed record GetProductsPagedQuery(
-    string? Category,
+    string? SearchName,
+    string? SearchSku,
+    string? SearchCategory,
+    string? SearchStock,
+    string? SearchPrice,
+    string[] CategoryCodes,
     bool LowStockOnly,
-    int Threshold,
     int Page,
-    int PageSize);
+    int PageSize) : IQuery<Result<PagedResult<ProductListItem>>>;

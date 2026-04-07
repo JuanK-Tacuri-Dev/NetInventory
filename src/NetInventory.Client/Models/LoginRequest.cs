@@ -4,10 +4,10 @@ namespace NetInventory.Client.Models;
 
 public class LoginRequest
 {
-    [Required]
-    [EmailAddress]
+    [Required(ErrorMessage = "El correo es obligatorio.")]
+    [EmailAddress(ErrorMessage = "Ingresa un correo electrónico válido.")]
     public string Email { get; set; } = string.Empty;
 
-    [Required]
+    [Required(ErrorMessage = "La contraseña es obligatoria.")]
     public string Password { get; set; } = string.Empty;
 }

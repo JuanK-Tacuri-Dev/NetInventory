@@ -1,5 +1,6 @@
 using System.Text.Json;
 using NetInventory.Api.Common;
+using NetInventory.Domain.Common;
 using NetInventory.Domain.Entities;
 using NetInventory.Domain.Interfaces;
 
@@ -27,10 +28,12 @@ public sealed class GlobalExceptionMiddleware(
             {
                 using var scope = scopeFactory.CreateScope();
                 var repo = scope.ServiceProvider.GetRequiredService<IErrorLogRepository>();
+                var uow  = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 await repo.AddAsync(ErrorLog.Create(
                     correlationId, ex,
                     context.Request.Path.ToString(),
                     context.Request.Method));
+                await uow.SaveChangesAsync();
             }
             catch (Exception logEx)
             {
@@ -39,7 +42,7 @@ public sealed class GlobalExceptionMiddleware(
 
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             context.Response.ContentType = "application/json";
-            var response = ApiResponse.Fail("Error interno", "INTERNAL_ERROR");
+            var response = ApiResponse.Fail(Error.General.InternalError);
             await context.Response.WriteAsync(JsonSerializer.Serialize(response, JsonOptions));
         }
     }

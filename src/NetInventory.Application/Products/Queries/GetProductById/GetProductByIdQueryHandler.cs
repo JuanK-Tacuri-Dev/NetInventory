@@ -1,21 +1,22 @@
+using Mapster;
+using NetInventory.Application.Common;
 using NetInventory.Application.Common.DTOs;
+using NetInventory.Application.Common.Interfaces;
 using NetInventory.Domain.Common;
-using NetInventory.Domain.Entities;
 using NetInventory.Domain.Interfaces;
 
 namespace NetInventory.Application.Products.Queries.GetProductById;
 
-public sealed class GetProductByIdQueryHandler(IProductRepository productRepository)
+public sealed class GetProductByIdQueryHandler(IProductRepository productRepository, ICurrentUserService currentUserService)
+    : IQueryHandler<GetProductByIdQuery, Result<ProductDto>>
 {
     public async Task<Result<ProductDto>> HandleAsync(GetProductByIdQuery query, CancellationToken ct = default)
     {
-        var product = await productRepository.GetByIdAsync(query.Id, ct);
+        var ownerId = currentUserService.GetCurrentUserId();
+        var product = await productRepository.GetByIdAsync(query.Id, ownerId, ct);
         if (product is null)
-            return Result.Failure<ProductDto>(Error.ProductNotFound);
+            return Result.Failure<ProductDto>(Error.Product.NotFound);
 
-        return Result.Success(ToDto(product));
+        return Result.Success(product.Adapt<ProductDto>());
     }
-
-    private static ProductDto ToDto(Product p) =>
-        new(p.Id, p.Name, p.SKU.Value, p.Category, p.QuantityInStock, p.UnitPrice.Amount, p.CreatedAt, p.IsLowStock());
 }

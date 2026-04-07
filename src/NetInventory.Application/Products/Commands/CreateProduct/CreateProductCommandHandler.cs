@@ -1,3 +1,4 @@
+using Mapster;
 using NetInventory.Application.Common;
 using NetInventory.Application.Common.DTOs;
 using NetInventory.Application.Common.Interfaces;
@@ -13,6 +14,7 @@ public sealed class CreateProductCommandHandler(
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUserService,
     ValidationBehavior<CreateProductCommand> validator)
+    : ICommandHandler<CreateProductCommand, Result<ProductDto>>
 {
     public async Task<Result<ProductDto>> HandleAsync(CreateProductCommand command, CancellationToken ct = default)
     {
@@ -26,23 +28,21 @@ public sealed class CreateProductCommandHandler(
 
         var sku = skuResult.Value;
 
-        var exists = await productRepository.ExistsBySkuAsync(sku.Value, null, ct);
+        var ownerId = currentUserService.GetCurrentUserId();
+        var exists = await productRepository.ExistsBySkuAsync(sku.Value, ownerId, null, ct);
         if (exists)
-            return Result.Failure<ProductDto>(Error.SkuDuplicated);
+            return Result.Failure<ProductDto>(Error.Product.SkuDuplicated);
 
         var moneyResult = Money.Create(command.UnitPrice);
         if (moneyResult.IsFailure)
             return Result.Failure<ProductDto>(moneyResult.Error);
 
         var currentUser = currentUserService.GetCurrentUser();
-        var product = Product.Create(command.Name, sku, command.Category, moneyResult.Value, currentUser);
+        var product = Product.Create(command.Name, sku, command.CategoryTableId, command.CategoryCode, moneyResult.Value, command.MinStock, command.MaxStock, currentUser, ownerId);
 
         await productRepository.AddAsync(product, ct);
         await unitOfWork.SaveChangesAsync(ct);
 
-        return Result.Success(ToDto(product));
+        return Result.Success(product.Adapt<ProductDto>());
     }
-
-    private static ProductDto ToDto(Product p) =>
-        new(p.Id, p.Name, p.SKU.Value, p.Category, p.QuantityInStock, p.UnitPrice.Amount, p.CreatedAt, p.IsLowStock());
 }

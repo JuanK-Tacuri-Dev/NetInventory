@@ -5,5 +5,6 @@ public sealed record StockMovementDto(
     Guid ProductId,
     string Type,
     int Quantity,
+    string? Reason,
     DateTime Timestamp,
     string? CreatedBy);

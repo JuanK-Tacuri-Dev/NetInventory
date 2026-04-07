@@ -1,18 +1,20 @@
+using Mapster;
+using NetInventory.Application.Common;
 using NetInventory.Application.Common.DTOs;
+using NetInventory.Application.Common.Interfaces;
 using NetInventory.Domain.Common;
-using NetInventory.Domain.Entities;
 using NetInventory.Domain.Interfaces;
 
 namespace NetInventory.Application.Products.Queries.GetProducts;
 
-public sealed class GetProductsQueryHandler(IProductRepository productRepository)
+public sealed class GetProductsQueryHandler(IProductRepository productRepository, ICurrentUserService currentUserService)
+    : IQueryHandler<GetProductsQuery, Result<IEnumerable<ProductDto>>>
 {
     public async Task<Result<IEnumerable<ProductDto>>> HandleAsync(GetProductsQuery query, CancellationToken ct = default)
     {
-        var products = await productRepository.GetAllAsync(query.Category, query.LowStockOnly, query.Threshold, ct);
-        return Result.Success(products.Select(p => ToDto(p, query.Threshold)));
+        var ownerId = currentUserService.GetCurrentUserId();
+        var products = await productRepository.GetAllAsync(ownerId, query.CategoryCode, query.LowStockOnly, ct);
+        return Result.Success(products.Select(p =>
+            p.Adapt<ProductDto>() with { IsLowStock = p.IsLowStock() }));
     }
-
-    private static ProductDto ToDto(Product p, int threshold) =>
-        new(p.Id, p.Name, p.SKU.Value, p.Category, p.QuantityInStock, p.UnitPrice.Amount, p.CreatedAt, p.IsLowStock(threshold));
 }

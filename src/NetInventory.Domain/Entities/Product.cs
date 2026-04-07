@@ -9,42 +9,53 @@ public sealed class Product
     public Guid Id { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public Sku SKU { get; private set; } = default!;
-    public string Category { get; private set; } = string.Empty;
+    public int CategoryTableId { get; private set; }
+    public string CategoryCode { get; private set; } = string.Empty;
     public int QuantityInStock { get; private set; }
+    public int MinStock { get; private set; }
+    public int MaxStock { get; private set; }
     public Money UnitPrice { get; private set; } = default!;
     public DateTime CreatedAt { get; private set; }
     public string? CreatedBy { get; private set; }
     public string? UpdatedBy { get; private set; }
+    public string OwnerId { get; private set; } = string.Empty;
 
     private Product() { }
 
-    public static Product Create(string name, Sku sku, string category, Money unitPrice, string createdBy) => new()
+    public static Product Create(string name, Sku sku, int categoryTableId, string categoryCode, Money unitPrice, int minStock, int maxStock, string createdBy, string ownerId) => new()
     {
         Id = Guid.NewGuid(),
         Name = name,
         SKU = sku,
-        Category = category,
+        CategoryTableId = categoryTableId,
+        CategoryCode = categoryCode,
         UnitPrice = unitPrice,
         QuantityInStock = 0,
+        MinStock = minStock,
+        MaxStock = maxStock,
         CreatedAt = DateTime.UtcNow,
-        CreatedBy = createdBy
+        CreatedBy = createdBy,
+        OwnerId = ownerId
     };
 
-    public void Update(string name, string category, Money unitPrice, string updatedBy)
+    public void Update(string name, int categoryTableId, string categoryCode, Money unitPrice, int minStock, int maxStock, string updatedBy)
     {
         Name = name;
-        Category = category;
+        CategoryTableId = categoryTableId;
+        CategoryCode = categoryCode;
         UnitPrice = unitPrice;
+        MinStock = minStock;
+        MaxStock = maxStock;
         UpdatedBy = updatedBy;
     }
 
     public Result ApplyMovement(int quantity, MovementType type)
     {
         if (quantity <= 0)
-            return Result.Failure(Error.InvalidQuantity);
+            return Result.Failure(Error.Stock.InvalidQuantity);
 
         if (type == MovementType.Outbound && QuantityInStock - quantity < 0)
-            return Result.Failure(Error.StockNegative);
+            return Result.Failure(Error.Stock.Negative);
 
         QuantityInStock = type == MovementType.Inbound
             ? QuantityInStock + quantity
@@ -53,5 +64,5 @@ public sealed class Product
         return Result.Success();
     }
 
-    public bool IsLowStock(int threshold = 10) => QuantityInStock < threshold;
+    public bool IsLowStock() => QuantityInStock < MinStock;
 }

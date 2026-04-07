@@ -25,7 +25,7 @@ public class ResultTests
     [Fact]
     public void Failure_IsSuccessFalse()
     {
-        var result = Result.Failure<string>(Error.ProductNotFound);
+        var result = Result.Failure<string>(Error.Product.NotFound);
 
         result.IsSuccess.Should().BeFalse();
         result.IsFailure.Should().BeTrue();
@@ -34,7 +34,7 @@ public class ResultTests
     [Fact]
     public void Failure_AccessingValue_ThrowsInvalidOperationException()
     {
-        var result = Result.Failure<string>(Error.ProductNotFound);
+        var result = Result.Failure<string>(Error.Product.NotFound);
 
         var act = () => { var _ = result.Value; };
 
@@ -44,9 +44,9 @@ public class ResultTests
     [Fact]
     public void Failure_ContainsError()
     {
-        var result = Result.Failure<string>(Error.SkuDuplicated);
+        var result = Result.Failure<string>(Error.Product.SkuDuplicated);
 
-        result.Error.Should().Be(Error.SkuDuplicated);
+        result.Error.Should().Be(Error.Product.SkuDuplicated);
         result.Error.Code.Should().Be("SKU_DUPLICATED");
     }
 
@@ -75,10 +75,10 @@ public class ResultTests
     [Fact]
     public void ResultGeneric_Failure_IsFailureTrue()
     {
-        var result = Result.Failure<int>(Error.InvalidQuantity);
+        var result = Result.Failure<int>(Error.Stock.InvalidQuantity);
 
         result.IsFailure.Should().BeTrue();
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(Error.InvalidQuantity);
+        result.Error.Should().Be(Error.Stock.InvalidQuantity);
     }
 }

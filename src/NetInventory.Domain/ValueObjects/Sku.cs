@@ -11,12 +11,12 @@ public sealed class Sku : IEquatable<Sku>
     public static Result<Sku> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return Result.Failure<Sku>(new Error("SKU_EMPTY", "El SKU no puede estar vacio."));
+            return Result.Failure<Sku>(Error.Sku.Empty);
 
         value = value.Trim().ToUpperInvariant();
 
         if (value.Length > 50)
-            return Result.Failure<Sku>(new Error("SKU_TOO_LONG", "El SKU no puede superar los 50 caracteres."));
+            return Result.Failure<Sku>(Error.Sku.TooLong);
 
         return Result.Success(new Sku(value));
     }

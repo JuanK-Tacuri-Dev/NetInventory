@@ -1,3 +1,4 @@
+using Mapster;
 using NetInventory.Application.Common;
 using NetInventory.Application.Common.DTOs;
 using NetInventory.Application.Common.Interfaces;
@@ -16,6 +17,7 @@ public sealed class RegisterMovementCommandHandler(
     ICurrentUserService currentUserService,
     ValidationBehavior<RegisterMovementCommand> validator,
     IEnumerable<IMovementStrategy> strategies)
+    : ICommandHandler<RegisterMovementCommand, Result<StockMovementDto>>
 {
     public async Task<Result<StockMovementDto>> HandleAsync(RegisterMovementCommand command, CancellationToken ct = default)
     {
@@ -23,31 +25,29 @@ public sealed class RegisterMovementCommandHandler(
         if (validation.IsFailure)
             return Result.Failure<StockMovementDto>(validation.Error);
 
-        var product = await productRepository.GetByIdAsync(command.ProductId, ct);
+        var ownerId = currentUserService.GetCurrentUserId();
+        var product = await productRepository.GetByIdAsync(command.ProductId, ownerId, ct);
         if (product is null)
-            return Result.Failure<StockMovementDto>(Error.ProductNotFound);
+            return Result.Failure<StockMovementDto>(Error.Product.NotFound);
 
         if (!Enum.TryParse<MovementType>(command.Type, out var movementType))
-            return Result.Failure<StockMovementDto>(new Error("INVALID_TYPE", "Tipo de movimiento no reconocido."));
+            return Result.Failure<StockMovementDto>(Error.Stock.InvalidMovementType);
 
         var strategy = strategies.FirstOrDefault(s => s.MovementType == movementType);
         if (strategy is null)
-            return Result.Failure<StockMovementDto>(new Error("STRATEGY_NOT_FOUND", "No existe estrategia para el tipo de movimiento."));
+            return Result.Failure<StockMovementDto>(Error.Stock.StrategyNotFound);
 
         var applyResult = strategy.Apply(product, command.Quantity);
         if (applyResult.IsFailure)
             return Result.Failure<StockMovementDto>(applyResult.Error);
 
         var currentUser = currentUserService.GetCurrentUser();
-        var movement = StockMovement.Create(product.Id, movementType, command.Quantity, currentUser);
+        var movement = StockMovement.Create(product.Id, movementType, command.Quantity, command.Reason, currentUser);
 
         await productRepository.UpdateAsync(product, ct);
         await stockMovementRepository.AddAsync(movement, ct);
         await unitOfWork.SaveChangesAsync(ct);
 
-        return Result.Success(ToDto(movement));
+        return Result.Success(movement.Adapt<StockMovementDto>());
     }
-
-    private static StockMovementDto ToDto(StockMovement m) =>
-        new(m.Id, m.ProductId, m.Type.ToString(), m.Quantity, m.Timestamp, m.CreatedBy);
 }

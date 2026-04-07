@@ -8,7 +8,7 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 {
     public void Configure(EntityTypeBuilder<Product> builder)
     {
-        builder.ToTable("Products");
+        builder.ToTable("tbProducts");
 
         builder.HasKey(p => p.Id);
 
@@ -22,15 +22,23 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
                 .HasColumnName("SKU")
                 .HasMaxLength(50)
                 .IsRequired();
-            skuBuilder.HasIndex(s => s.Value).IsUnique();
         });
 
-        builder.Property(p => p.Category)
-            .IsRequired()
-            .HasMaxLength(100);
+        builder.Property(p => p.CategoryTableId).IsRequired();
+        builder.Property(p => p.CategoryCode).IsRequired().HasMaxLength(20);
 
         builder.Property(p => p.QuantityInStock)
             .IsRequired();
+
+        builder.Property(p => p.MinStock)
+            .IsRequired()
+            .HasDefaultValue(0)
+            .ValueGeneratedNever();
+
+        builder.Property(p => p.MaxStock)
+            .IsRequired()
+            .HasDefaultValue(0)
+            .ValueGeneratedNever();
 
         builder.OwnsOne(p => p.UnitPrice, moneyBuilder =>
         {
@@ -43,5 +51,11 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.CreatedAt);
         builder.Property(p => p.CreatedBy);
         builder.Property(p => p.UpdatedBy);
+
+        builder.Property(p => p.OwnerId)
+            .IsRequired()
+            .HasMaxLength(450);
+
+        builder.HasIndex(p => p.OwnerId);
     }
 }

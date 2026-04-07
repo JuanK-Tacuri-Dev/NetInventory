@@ -31,5 +31,5 @@ public sealed class Result<TValue>(TValue value, bool isSuccess, Error error)
 
     public TValue Value => IsSuccess
         ? _value
-        : throw new InvalidOperationException("No se puede acceder al valor de un resultado fallido.");
+        : throw new InvalidOperationException(NetInventory.Resources.Messages.Error_FailedResultAccess);
 }

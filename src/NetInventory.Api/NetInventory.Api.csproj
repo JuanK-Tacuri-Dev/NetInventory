@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\NetInventory.Application\NetInventory.Application.csproj" />
     <ProjectReference Include="..\NetInventory.Infrastructure\NetInventory.Infrastructure.csproj" />
+    <ProjectReference Include="..\NetInventory.Resources\NetInventory.Resources.csproj" />
   </ItemGroup>
 
   <ItemGroup>

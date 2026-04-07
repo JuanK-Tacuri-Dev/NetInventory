@@ -1,28 +1,35 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NetInventory.Domain.Entities;
 using NetInventory.Domain.Interfaces;
 
 namespace NetInventory.Infrastructure.Persistence.Repositories;
 
-public sealed class ProductRepository(AppDbContext context) : IProductRepository
+public sealed class ProductRepository(AppDbContext context, ILogger<ProductRepository> logger) : IProductRepository
 {
-    public async Task<Product?> GetByIdAsync(Guid id, CancellationToken ct = default)
-        => await context.Products.FirstOrDefaultAsync(x => x.Id == id, ct);
+    public async Task<Product?> GetByIdAsync(Guid id, string ownerId, CancellationToken ct = default)
+    {
+        logger.LogWarning("GetByIdAsync id={Id} ownerId={OwnerId}", id, ownerId);
+        var product = await context.Products.FirstOrDefaultAsync(x => x.Id == id && x.OwnerId == ownerId, ct);
+        logger.LogWarning("GetByIdAsync result={Found}", product is null ? "NULL" : product.Name);
+        return product;
+    }
 
     public async Task<IEnumerable<Product>> GetAllAsync(
-        string? category = null,
+        string? ownerId = null,
+        string? categoryCode = null,
         bool lowStockOnly = false,
-        int threshold = 10,
         CancellationToken ct = default)
         => await context.Products
-            .Where(x => category == null || x.Category == category)
-            .Where(x => !lowStockOnly || x.QuantityInStock < threshold)
+            .Where(x => ownerId == null || x.OwnerId == ownerId)
+            .Where(x => categoryCode == null || x.CategoryCode == categoryCode)
+            .Where(x => !lowStockOnly || x.QuantityInStock < x.MinStock)
             .AsNoTracking()
             .ToListAsync(ct);
 
-    public async Task<bool> ExistsBySkuAsync(string sku, Guid? excludeId = null, CancellationToken ct = default)
+    public async Task<bool> ExistsBySkuAsync(string sku, string ownerId, Guid? excludeId = null, CancellationToken ct = default)
         => await context.Products
-            .AnyAsync(x => x.SKU.Value == sku && (excludeId == null || x.Id != excludeId), ct);
+            .AnyAsync(x => x.SKU.Value == sku && x.OwnerId == ownerId && (excludeId == null || x.Id != excludeId), ct);
 
     public async Task AddAsync(Product product, CancellationToken ct = default)
         => await context.Products.AddAsync(product, ct);

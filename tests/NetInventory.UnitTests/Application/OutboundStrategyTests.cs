@@ -29,7 +29,7 @@ public sealed class OutboundStrategyTests
         var result = _strategy.Apply(product, 10);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Error.StockNegative);
+        result.Error.Should().Be(Error.Stock.Negative);
         product.QuantityInStock.Should().Be(5);
     }
 }

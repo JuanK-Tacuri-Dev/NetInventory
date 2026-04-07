@@ -110,3 +110,17 @@ window.showLoading = function (msg) {
 window.hideLoading = function () {
     Swal.close();
 };
+
+// Idle timeout ———————————————————————————————————————————————
+(function () {
+    var _lastActivity = Date.now();
+    ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll', 'click'].forEach(function (evt) {
+        document.addEventListener(evt, function () { _lastActivity = Date.now(); }, { passive: true });
+    });
+    window.getIdleSeconds = function () {
+        return Math.floor((Date.now() - _lastActivity) / 1000);
+    };
+    window.resetIdleTimer = function () {
+        _lastActivity = Date.now();
+    };
+})();

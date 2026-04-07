@@ -1,0 +1,254 @@
+@page "/audit-configs"
+@attribute [Authorize]
+@inject AuditConfigService AuditConfigSvc
+@inject IJSRuntime JS
+
+<PageTitle>Config. Auditoría - NetInventory</PageTitle>
+
+<div class="page-title-box">
+    <h4><i class="bi bi-sliders mr-2"></i>Configuración de Auditoría</h4>
+    <button class="btn btn-primary btn-sm" @onclick="OpenCreateModal">
+        <i class="bi bi-plus mr-1"></i> Nueva configuración
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="card-title">Controla qué solicitudes HTTP se almacenan en la base de datos</div>
+
+        @if (loading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border" style="color:#24356a;" role="status"></div>
+            </div>
+        }
+        else if (configs.Count == 0)
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-sliders" style="font-size:48px;color:#74788d;display:block;"></i>
+                <p class="mt-2 text-muted">No hay configuraciones de auditoría.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th style="width:120px;" class="text-center">Acciones</th>
+                            <th style="width:100px;">Método</th>
+                            <th>Patrón URL</th>
+                            <th>Descripción</th>
+                            <th style="width:100px;" class="text-center">Activo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var cfg in configs)
+                        {
+                            <tr>
+                                <td class="text-center" style="white-space:nowrap;">
+                                    <button class="btn btn-outline-warning btn-sm btn-icon" title="Editar"
+                                            @onclick="() => OpenEditModal(cfg)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm btn-icon" title="Eliminar"
+                                            @onclick="() => DeleteConfig(cfg)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                                <td>
+                                    <span class="badge badge-pill" style="font-size:10px;font-weight:700;background:@GetMethodColor(cfg.Method);color:#fff;">
+                                        @cfg.Method
+                                    </span>
+                                </td>
+                                <td><code style="font-size:12px;">@cfg.UrlPattern</code></td>
+                                <td style="font-size:12px;">@cfg.Description</td>
+                                <td class="text-center">
+                                    <div class="custom-control custom-switch" style="display:inline-block;">
+                                        <input type="checkbox" class="custom-control-input" id="toggle-@cfg.Id"
+                                               checked="@cfg.IsEnabled"
+                                               @onchange="() => ToggleConfig(cfg)" />
+                                        <label class="custom-control-label" for="toggle-@cfg.Id"></label>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@if (showModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(editingConfig.Id == Guid.Empty ? "Nueva configuración" : "Editar configuración")</h5>
+                    <button type="button" class="close" @onclick="CloseModal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="editingConfig" OnValidSubmit="SaveConfig">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-group">
+                            <label>Método HTTP</label>
+                            <InputSelect class="form-control" @bind-Value="editingConfig.Method">
+                                <option value="">-- Seleccionar --</option>
+                                <option value="GET">GET</option>
+                                <option value="POST">POST</option>
+                                <option value="PUT">PUT</option>
+                                <option value="DELETE">DELETE</option>
+                                <option value="PATCH">PATCH</option>
+                                <option value="*">* (Todos)</option>
+                            </InputSelect>
+                            <ValidationMessage For="() => editingConfig.Method" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Patrón URL (prefijo)</label>
+                            <InputText class="form-control" @bind-Value="editingConfig.UrlPattern" placeholder="/api/products" />
+                            <ValidationMessage For="() => editingConfig.UrlPattern" />
+                            <small class="form-text text-muted">Cualquier URL que comience con este prefijo será auditada.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Descripción</label>
+                            <InputText class="form-control" @bind-Value="editingConfig.Description" placeholder="Ej: Creación de productos" />
+                            <ValidationMessage For="() => editingConfig.Description" />
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(formError))
+                        {
+                            <div class="alert alert-danger" style="font-size:12px;">@formError</div>
+                        }
+
+                        <div class="modal-footer px-0 pb-0">
+                            <button type="button" class="btn btn-outline-secondary" @onclick="CloseModal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" disabled="@saving">
+                                @if (saving)
+                                {
+                                    <span class="spinner-border spinner-border-sm mr-1"></span>
+                                }
+                                Guardar
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<AuditConfigModel> configs = [];
+    private bool loading;
+    private bool showModal;
+    private bool saving;
+    private string? formError;
+    private AuditConfigModel editingConfig = new();
+
+    protected override async Task OnInitializedAsync() => await LoadConfigs();
+
+    private async Task LoadConfigs()
+    {
+        loading = true;
+        configs = await AuditConfigSvc.GetAllAsync();
+        loading = false;
+    }
+
+    private void OpenCreateModal()
+    {
+        editingConfig = new AuditConfigModel();
+        formError = null;
+        showModal = true;
+    }
+
+    private void OpenEditModal(AuditConfigModel cfg)
+    {
+        editingConfig = new AuditConfigModel
+        {
+            Id = cfg.Id,
+            Method = cfg.Method,
+            UrlPattern = cfg.UrlPattern,
+            Description = cfg.Description,
+            IsEnabled = cfg.IsEnabled
+        };
+        formError = null;
+        showModal = true;
+    }
+
+    private void CloseModal() => showModal = false;
+
+    private async Task SaveConfig()
+    {
+        saving = true;
+        formError = null;
+
+        bool ok = editingConfig.Id == Guid.Empty
+            ? await AuditConfigSvc.CreateAsync(editingConfig)
+            : await AuditConfigSvc.UpdateAsync(editingConfig);
+
+        if (ok)
+        {
+            await AuditConfigSvc.InvalidateCacheAsync();
+            showModal = false;
+            await LoadConfigs();
+            var msg = editingConfig.Id == Guid.Empty ? "Configuración creada correctamente." : "Configuración actualizada correctamente.";
+            await JS.InvokeVoidAsync("swalSuccess", "Guardado", msg);
+        }
+        else
+        {
+            formError = "No se pudo guardar la configuración. Intente nuevamente.";
+        }
+        saving = false;
+    }
+
+    private async Task ToggleConfig(AuditConfigModel cfg)
+    {
+        var ok = await AuditConfigSvc.ToggleAsync(cfg.Id);
+        await AuditConfigSvc.InvalidateCacheAsync();
+        await LoadConfigs();
+        if (ok)
+        {
+            var estado = configs.FirstOrDefault(c => c.Id == cfg.Id)?.IsEnabled == true ? "activada" : "desactivada";
+            await JS.InvokeVoidAsync("swalSuccess", "Configuración actualizada", $"'{cfg.Description}' fue {estado}.");
+        }
+        else
+            await JS.InvokeVoidAsync("swalError", "Error", "No se pudo cambiar el estado.");
+    }
+
+    private async Task DeleteConfig(AuditConfigModel cfg)
+    {
+        var confirm = await JS.InvokeAsync<bool>("swalConfirm",
+            "¿Eliminar configuración?",
+            $"Se eliminará '{cfg.Description}'. Esta acción no se puede deshacer.",
+            "Sí, eliminar");
+        if (!confirm) return;
+
+        var ok = await AuditConfigSvc.DeleteAsync(cfg.Id);
+        await AuditConfigSvc.InvalidateCacheAsync();
+        if (ok)
+        {
+            await JS.InvokeVoidAsync("swalSuccess", "Configuración eliminada", $"'{cfg.Description}' fue eliminada correctamente.");
+            await LoadConfigs();
+        }
+        else
+            await JS.InvokeVoidAsync("swalError", "Error", "No se pudo eliminar la configuración.");
+    }
+
+    private static string GetMethodColor(string method) => method switch
+    {
+        "GET"    => "#50a5f1",
+        "POST"   => "#34c38f",
+        "PUT"    => "#f1b44c",
+        "DELETE" => "#f46a6a",
+        "PATCH"  => "#e83e8c",
+        "*"      => "#6f42c1",
+        _        => "#74788d"
+    };
+}

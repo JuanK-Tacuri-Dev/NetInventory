@@ -1,6 +1,6 @@
 @NetInventory.Api_HostAddress = http://localhost:5152
 
-GET {{NetInventory.Api_HostAddress}}/weatherforecast/
+GET {{NetInventory.Api_HostAddress}}/swagger/index.html
 Accept: application/json
 
 ###

@@ -1,8 +1,8 @@
 @page "/products/{Id:guid}"
 @attribute [Authorize]
 @inject ProductService Products
+@inject GeneralValueService GeneralValues
 @inject NavigationManager Navigation
-@inject IJSRuntime JS
 
 <PageTitle>Detalle de producto - NetInventory</PageTitle>
 
@@ -30,104 +30,54 @@ else
         </div>
     </div>
 
-    <div class="row">
-        <!-- Datos del producto -->
-        <div class="col-lg-5 col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <i class="bi bi-info-circle mr-2"></i>Información del producto
-                </div>
-                <div class="card-body">
-                    <table class="table table-borderless mb-0" style="font-size:13px;">
-                        <tbody>
-                            <tr>
-                                <td class="text-muted font-weight-600" style="width:40%;padding:8px 0;">SKU</td>
-                                <td style="padding:8px 0;"><code style="color:#24356a;">@product.SKU</code></td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted font-weight-600" style="padding:8px 0;">Categoría</td>
-                                <td style="padding:8px 0;">
-                                    <span class="badge badge-pill badge-light" style="border:1px solid #dee2e6;color:#495057;">
-                                        @product.Category
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted font-weight-600" style="padding:8px 0;">Stock actual</td>
-                                <td style="padding:8px 0;">
-                                    <strong>@product.QuantityInStock</strong>
-                                    @if (product.QuantityInStock < 10)
-                                    {
-                                        <span class="badge-low-stock ml-2">Stock bajo</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge badge-pill badge-success ml-2" style="font-size:10px;">OK</span>
-                                    }
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted font-weight-600" style="padding:8px 0;">Precio unitario</td>
-                                <td style="padding:8px 0;" class="font-weight-600 text-navy">$@product.UnitPrice.ToString("N2")</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted font-weight-600" style="padding:8px 0;">Creado</td>
-                                <td style="padding:8px 0;">@product.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <!-- Datos del producto -->
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-info-circle mr-2"></i>Información del producto
         </div>
-
-        <!-- Registrar movimiento -->
-        <div class="col-lg-7 col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <i class="bi bi-arrow-left-right mr-2"></i>Registrar movimiento de stock
+        <div class="card-body">
+            <div class="row" style="row-gap:0;">
+                <div class="col-sm-4 col-6" style="padding:8px 16px;border-bottom:1px solid #f1f1f1;">
+                    <div style="font-size:11px;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;">SKU</div>
+                    <div style="margin-top:3px;"><code style="color:#24356a;font-size:13px;">@product.SKU</code></div>
                 </div>
-                <div class="card-body">
-                    <EditForm Model="movementRequest" OnValidSubmit="HandleMovement">
-                        <DataAnnotationsValidator />
-                        <div class="row align-items-end">
-                            <div class="col-sm-5">
-                                <div class="form-group mb-2 mb-sm-0">
-                                    <label>Tipo de movimiento</label>
-                                    <select id="movTypeSelect" class="form-control" @onchange="OnMovTypeChange">
-                                        <option value="Inbound">Entrada (+)</option>
-                                        <option value="Outbound">Salida (-)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-sm-4">
-                                <div class="form-group mb-2 mb-sm-0">
-                                    <label>Cantidad</label>
-                                    <InputNumber @bind-Value="movementRequest.Quantity" class="form-control" min="1" />
-                                    <ValidationMessage For="() => movementRequest.Quantity" />
-                                </div>
-                            </div>
-                            <div class="col-sm-3">
-                                <button type="submit" disabled="@savingMovement" class="btn btn-principal btn-block" style="margin-top:20px;">
-                                    @if (savingMovement)
-                                    {
-                                        <span class="spinner-border spinner-border-sm" role="status"></span>
-                                    }
-                                    else
-                                    {
-                                        <i class="bi bi-plus-circle mr-1"></i>
-                                        <span>Registrar</span>
-                                    }
-                                </button>
-                            </div>
-                        </div>
-                    </EditForm>
-
-                    @if (!string.IsNullOrEmpty(movementError))
-                    {
-                        <div class="alert alert-danger py-2 mt-3" style="font-size:12px;">
-                            <i class="bi bi-exclamation-circle mr-1"></i> @movementError
-                        </div>
-                    }
+                <div class="col-sm-4 col-6" style="padding:8px 16px;border-bottom:1px solid #f1f1f1;">
+                    <div style="font-size:11px;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;">Categoría</div>
+                    <div style="margin-top:3px;">
+                        <span class="badge badge-pill badge-light" style="border:1px solid #dee2e6;color:#495057;font-size:12px;">
+                            @(product.CategoryDescription is { Length: > 0 } d ? d : product.CategoryCode)
+                        </span>
+                    </div>
+                </div>
+                <div class="col-sm-4 col-6" style="padding:8px 16px;border-bottom:1px solid #f1f1f1;">
+                    <div style="font-size:11px;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;">Precio unitario</div>
+                    <div style="margin-top:3px;font-size:15px;font-weight:700;color:#24356a;">$@product.UnitPrice.ToString("N2")</div>
+                </div>
+                <div class="col-sm-4 col-6" style="padding:8px 16px;border-bottom:1px solid #f1f1f1;">
+                    <div style="font-size:11px;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;">Stock actual</div>
+                    <div style="margin-top:3px;">
+                        <strong style="font-size:15px;">@product.QuantityInStock</strong>
+                        @if (product.MinStock > 0 && product.QuantityInStock < product.MinStock)
+                        {
+                            <span class="badge-low-stock ml-2">Stock bajo</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-pill badge-success ml-2" style="font-size:10px;">OK</span>
+                        }
+                    </div>
+                </div>
+                <div class="col-sm-4 col-6" style="padding:8px 16px;border-bottom:1px solid #f1f1f1;">
+                    <div style="font-size:11px;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;">Stock mínimo</div>
+                    <div style="margin-top:3px;font-size:14px;">@product.MinStock</div>
+                </div>
+                <div class="col-sm-4 col-6" style="padding:8px 16px;border-bottom:1px solid #f1f1f1;">
+                    <div style="font-size:11px;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;">Stock máximo</div>
+                    <div style="margin-top:3px;font-size:14px;">@(product.MaxStock > 0 ? product.MaxStock.ToString() : "—")</div>
+                </div>
+                <div class="col-sm-4 col-6" style="padding:8px 16px;">
+                    <div style="font-size:11px;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:.5px;">Creado</div>
+                    <div style="margin-top:3px;font-size:13px;">@product.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
                 </div>
             </div>
         </div>
@@ -153,9 +103,10 @@ else
                         <thead>
                             <tr>
                                 <th class="text-center" style="width:100px;">Tipo</th>
-                                <th class="text-center" style="width:90px;">Cantidad</th>
-                                <th>Fecha</th>
-                                <th>Registrado por</th>
+                                <th class="text-center" style="width:80px;">Cantidad</th>
+                                <th>Motivo</th>
+                                <th style="width:140px;">Fecha</th>
+                                <th style="width:140px;">Registrado por</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -173,6 +124,7 @@ else
                                         }
                                     </td>
                                     <td class="text-center font-weight-600">@m.Quantity</td>
+                                    <td style="font-size:12px;color:#6c757d;">@(string.IsNullOrEmpty(m.Reason) ? "—" : m.Reason)</td>
                                     <td>@m.Timestamp.ToString("dd/MM/yyyy HH:mm")</td>
                                     <td>@(m.CreatedBy ?? "-")</td>
                                 </tr>
@@ -190,43 +142,19 @@ else
 
     private ProductModel? product;
     private List<StockMovementModel> movements = [];
-    private RegisterMovementRequest movementRequest = new() { Type = "Inbound", Quantity = 1 };
+    private List<GeneralValueModel> _categories = [];
     private bool loading = true;
-    private bool savingMovement;
-    private string? movementError;
 
     protected override async Task OnInitializedAsync()
     {
+        var categoriesTask = GeneralValues.GetByTableIdAsync(1001);
         product = await Products.GetByIdAsync(Id);
         movements = await Products.GetMovementsAsync(Id);
+        _categories = await categoriesTask;
+
+        if (product is not null && string.IsNullOrEmpty(product.CategoryDescription))
+            product.CategoryDescription = _categories.FirstOrDefault(c => c.Code == product.CategoryCode)?.Description ?? product.CategoryCode;
+
         loading = false;
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-            await JS.InvokeVoidAsync("initSelect2", "movTypeSelect", "Tipo...");
-    }
-
-    private void OnMovTypeChange(ChangeEventArgs e)
-        => movementRequest.Type = e.Value?.ToString() ?? "Inbound";
-
-    private async Task HandleMovement()
-    {
-        savingMovement = true;
-        movementError = null;
-        var result = await Products.RegisterMovementAsync(Id, movementRequest);
-        if (result is not null)
-        {
-            movements = await Products.GetMovementsAsync(Id);
-            product = await Products.GetByIdAsync(Id);
-            movementRequest = new() { Type = movementRequest.Type, Quantity = 1 };
-            await JS.InvokeVoidAsync("swalSuccess", "Movimiento registrado", $"Se registró una {(result.Type == "Inbound" ? "entrada" : "salida")} de {result.Quantity} unidades.");
-        }
-        else
-        {
-            movementError = "No se pudo registrar el movimiento. Verifica que haya stock suficiente.";
-        }
-        savingMovement = false;
     }
 }

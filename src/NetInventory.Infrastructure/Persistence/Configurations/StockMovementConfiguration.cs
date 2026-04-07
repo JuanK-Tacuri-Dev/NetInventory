@@ -8,7 +8,7 @@ public sealed class StockMovementConfiguration : IEntityTypeConfiguration<StockM
 {
     public void Configure(EntityTypeBuilder<StockMovement> builder)
     {
-        builder.ToTable("StockMovements");
+        builder.ToTable("tbStockMovements");
 
         builder.HasKey(m => m.Id);
 
@@ -26,6 +26,9 @@ public sealed class StockMovementConfiguration : IEntityTypeConfiguration<StockM
 
         builder.Property(m => m.Quantity)
             .IsRequired();
+
+        builder.Property(m => m.Reason)
+            .HasMaxLength(500);
 
         builder.Property(m => m.Timestamp);
         builder.Property(m => m.CreatedBy);

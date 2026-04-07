@@ -8,17 +8,19 @@ public sealed class StockMovement
     public Guid ProductId { get; private set; }
     public MovementType Type { get; private set; }
     public int Quantity { get; private set; }
+    public string? Reason { get; private set; }
     public DateTime Timestamp { get; private set; }
     public string? CreatedBy { get; private set; }
 
     private StockMovement() { }
 
-    public static StockMovement Create(Guid productId, MovementType type, int quantity, string createdBy) => new()
+    public static StockMovement Create(Guid productId, MovementType type, int quantity, string? reason, string createdBy) => new()
     {
         Id = Guid.NewGuid(),
         ProductId = productId,
         Type = type,
         Quantity = quantity,
+        Reason = reason,
         Timestamp = DateTime.UtcNow,
         CreatedBy = createdBy
     };

@@ -24,14 +24,14 @@ public class ProductService
                 : new AuthenticationHeaderValue("Bearer", token);
     }
 
-    public async Task<List<ProductModel>> GetAllAsync(string? category = null, bool lowStockOnly = false, int threshold = 10)
+    public async Task<List<ProductModel>> GetAllAsync(string? categoryCode = null, bool lowStockOnly = false)
     {
         try
         {
             await SetAuthHeader();
-            var query = $"/api/products?lowStockOnly={lowStockOnly}&threshold={threshold}";
-            if (!string.IsNullOrWhiteSpace(category))
-                query += $"&category={Uri.EscapeDataString(category)}";
+            var query = $"{Constants.Api.Products}?lowStockOnly={lowStockOnly}";
+            if (!string.IsNullOrWhiteSpace(categoryCode))
+                query += $"&categoryCode={Uri.EscapeDataString(categoryCode)}";
 
             var result = await _http.GetFromJsonAsync<ApiResponse<List<ProductModel>>>(query);
             return result?.Data ?? [];
@@ -43,20 +43,27 @@ public class ProductService
     }
 
     public async Task<PagedResult<ProductModel>> GetPagedAsync(
-        string? category = null,
+        string? searchName = null,
+        string? searchSku = null,
+        string? searchCategory = null,
+        string? searchStock = null,
+        string? searchPrice = null,
+        string[]? categoryCodes = null,
         bool lowStockOnly = false,
-        int threshold = 10,
         int page = 1,
         int pageSize = 10)
     {
         try
         {
             await SetAuthHeader();
-            var query = $"/api/products/paged?lowStockOnly={lowStockOnly}&threshold={threshold}&page={page}&pageSize={pageSize}";
-            if (!string.IsNullOrWhiteSpace(category))
-                query += $"&category={Uri.EscapeDataString(category)}";
-
-            var result = await _http.GetFromJsonAsync<ApiResponse<PagedResult<ProductModel>>>(query);
+            var body = new
+            {
+                searchName, searchSku, searchCategory, searchStock, searchPrice,
+                categoryCodes, lowStockOnly, page, pageSize
+            };
+            var response = await _http.PostAsJsonAsync(Constants.Api.ProductsPaged, body);
+            if (!response.IsSuccessStatusCode) return new PagedResult<ProductModel>();
+            var result = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<ProductModel>>>();
             return result?.Data ?? new PagedResult<ProductModel>();
         }
         catch
@@ -70,7 +77,7 @@ public class ProductService
         try
         {
             await SetAuthHeader();
-            var result = await _http.GetFromJsonAsync<ApiResponse<ProductModel>>($"/api/products/{id}");
+            var result = await _http.GetFromJsonAsync<ApiResponse<ProductModel>>($"{Constants.Api.Products}/{id}");
             return result?.Data;
         }
         catch
@@ -84,7 +91,7 @@ public class ProductService
         try
         {
             await SetAuthHeader();
-            var response = await _http.PostAsJsonAsync("/api/products", request);
+            var response = await _http.PostAsJsonAsync(Constants.Api.Products, request);
             if (!response.IsSuccessStatusCode) return null;
             var result = await response.Content.ReadFromJsonAsync<ApiResponse<ProductModel>>();
             return result?.Data;
@@ -100,7 +107,7 @@ public class ProductService
         try
         {
             await SetAuthHeader();
-            var response = await _http.PutAsJsonAsync($"/api/products/{id}", request);
+            var response = await _http.PutAsJsonAsync($"{Constants.Api.Products}/{id}", request);
             if (!response.IsSuccessStatusCode) return null;
             var result = await response.Content.ReadFromJsonAsync<ApiResponse<ProductModel>>();
             return result?.Data;
@@ -116,7 +123,7 @@ public class ProductService
         try
         {
             await SetAuthHeader();
-            var response = await _http.DeleteAsync($"/api/products/{id}");
+            var response = await _http.DeleteAsync($"{Constants.Api.Products}/{id}");
             return response.IsSuccessStatusCode;
         }
         catch
@@ -125,19 +132,26 @@ public class ProductService
         }
     }
 
-    public async Task<StockMovementModel?> RegisterMovementAsync(Guid productId, RegisterMovementRequest request)
+    public async Task<(StockMovementModel? Data, string? Error)> RegisterMovementAsync(Guid productId, RegisterMovementRequest request)
     {
         try
         {
             await SetAuthHeader();
-            var response = await _http.PostAsJsonAsync($"/api/products/{productId}/movements", request);
-            if (!response.IsSuccessStatusCode) return null;
+            var response = await _http.PostAsJsonAsync($"{Constants.Api.Products}/{productId}/movements", request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var err = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
+                var msg = response.StatusCode == System.Net.HttpStatusCode.NotFound
+                    ? "Producto no encontrado. Verifica que tu sesión sea correcta."
+                    : err?.Error ?? "No se pudo registrar el movimiento.";
+                return (null, msg);
+            }
             var result = await response.Content.ReadFromJsonAsync<ApiResponse<StockMovementModel>>();
-            return result?.Data;
+            return (result?.Data, null);
         }
         catch
         {
-            return null;
+            return (null, "Error de conexión. Intenta de nuevo.");
         }
     }
 
@@ -146,7 +160,7 @@ public class ProductService
         try
         {
             await SetAuthHeader();
-            var result = await _http.GetFromJsonAsync<ApiResponse<List<StockMovementModel>>>($"/api/products/{productId}/movements");
+            var result = await _http.GetFromJsonAsync<ApiResponse<List<StockMovementModel>>>($"{Constants.Api.Products}/{productId}/movements");
             return result?.Data ?? [];
         }
         catch

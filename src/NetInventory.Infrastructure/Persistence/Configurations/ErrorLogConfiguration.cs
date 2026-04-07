@@ -8,7 +8,10 @@ public sealed class ErrorLogConfiguration : IEntityTypeConfiguration<ErrorLog>
 {
     public void Configure(EntityTypeBuilder<ErrorLog> builder)
     {
+        builder.ToTable("tbErrorLogs");
         builder.HasKey(x => x.Id);
+        builder.Property(x => x.ReferenceCode).HasMaxLength(20).IsRequired();
+        builder.HasIndex(x => x.ReferenceCode).IsUnique();
         builder.Property(x => x.CorrelationId).HasMaxLength(100).IsRequired();
         builder.Property(x => x.ExceptionType).HasMaxLength(200).IsRequired();
         builder.Property(x => x.Message).HasMaxLength(2000).IsRequired();

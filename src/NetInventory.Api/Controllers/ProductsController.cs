@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NetInventory.Api.Common;
+using NetInventory.Api.Common.Extensions;
+using NetInventory.Api.Requests.Products;
+using NetInventory.Application.Common;
 using NetInventory.Application.Products.Commands.CreateProduct;
 using NetInventory.Application.Products.Commands.DeleteProduct;
 using NetInventory.Application.Products.Commands.UpdateProduct;
@@ -15,122 +18,105 @@ namespace NetInventory.Api.Controllers;
 [ApiController]
 [Route("api/products")]
 [Authorize]
-public sealed class ProductsController(
-    GetProductsQueryHandler getProductsHandler,
-    GetProductByIdQueryHandler getProductByIdHandler,
-    GetProductsPagedQueryHandler getProductsPagedHandler,
-    CreateProductCommandHandler createProductHandler,
-    UpdateProductCommandHandler updateProductHandler,
-    DeleteProductCommandHandler deleteProductHandler,
-    RegisterMovementCommandHandler registerMovementHandler,
-    GetMovementsQueryHandler getMovementsHandler) : ControllerBase
+public sealed class ProductsController(IDispatcher dispatcher) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetProducts(
-        [FromQuery] string? category,
+        [FromQuery] string? categoryCode,
         [FromQuery] bool lowStockOnly = false,
-        [FromQuery] int threshold = 10,
         CancellationToken ct = default)
     {
-        var query = new GetProductsQuery(category, lowStockOnly, threshold);
-        var result = await getProductsHandler.HandleAsync(query, ct);
-        return Ok(ApiResponse<object>.Ok(result.Value));
+        var result = await dispatcher.QueryAsync(new GetProductsQuery(categoryCode, lowStockOnly), ct);
+
+        return result.ToActionResult(this);
     }
 
-    [HttpGet("paged")]
+    [HttpPost("paged")]
     public async Task<IActionResult> GetProductsPaged(
-        [FromQuery] string? category,
-        [FromQuery] bool lowStockOnly = false,
-        [FromQuery] int threshold = 10,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10,
+        [FromBody] GetProductsPagedRequest request,
         CancellationToken ct = default)
     {
-        var query = new GetProductsPagedQuery(category, lowStockOnly, threshold, page, pageSize);
-        var result = await getProductsPagedHandler.HandleAsync(query, ct);
-        return Ok(ApiResponse<object>.Ok(result.Value));
+        var query = new GetProductsPagedQuery(
+            request.SearchName, request.SearchSku, request.SearchCategory,
+            request.SearchStock, request.SearchPrice,
+            request.CategoryCodes ?? [], request.LowStockOnly,
+            request.Page, request.PageSize);
+
+        var result = await dispatcher.QueryAsync(query, ct);
+
+        return result.ToActionResult(this);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id, CancellationToken ct = default)
+    public async Task<IActionResult> GetById(
+        Guid id,
+        CancellationToken ct = default)
     {
-        var result = await getProductByIdHandler.HandleAsync(new GetProductByIdQuery(id), ct);
-        if (result.IsFailure)
-            return result.Error.Code == "PRODUCT_NOT_FOUND"
-                ? NotFound(ApiResponse.Fail(result.Error.Message, result.Error.Code))
-                : BadRequest(ApiResponse.Fail(result.Error.Message, result.Error.Code));
+        var result = await dispatcher.QueryAsync(new GetProductByIdQuery(id), ct);
 
-        return Ok(ApiResponse<object>.Ok(result.Value));
+        return result.ToActionResult(this);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateProductCommand command, CancellationToken ct = default)
+    public async Task<IActionResult> Create(
+        [FromBody] CreateProductRequest request,
+        CancellationToken ct = default)
     {
-        var result = await createProductHandler.HandleAsync(command, ct);
-        if (result.IsFailure)
-            return result.Error.Code == "PRODUCT_NOT_FOUND"
-                ? NotFound(ApiResponse.Fail(result.Error.Message, result.Error.Code))
-                : BadRequest(ApiResponse.Fail(result.Error.Message, result.Error.Code));
+        var result = await dispatcher.SendAsync(
+            new CreateProductCommand(
+                request.Name, request.SKU, request.CategoryTableId,
+                request.CategoryCode, request.UnitPrice, request.MinStock, request.MaxStock),
+            ct);
 
-        return CreatedAtAction(
-            nameof(GetById),
-            new { id = result.Value.Id },
-            ApiResponse<object>.Ok(result.Value));
+        return result.ToActionResult(this,
+            value => CreatedAtAction(nameof(GetById), new { id = value.Id }, ApiResponse<object>.Ok(value)));
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductRequest request, CancellationToken ct = default)
+    public async Task<IActionResult> Update(
+        Guid id,
+        [FromBody] UpdateProductRequest request,
+        CancellationToken ct = default)
     {
-        var command = new UpdateProductCommand(id, request.Name, request.Category, request.UnitPrice);
-        var result = await updateProductHandler.HandleAsync(command, ct);
-        if (result.IsFailure)
-            return result.Error.Code == "PRODUCT_NOT_FOUND"
-                ? NotFound(ApiResponse.Fail(result.Error.Message, result.Error.Code))
-                : BadRequest(ApiResponse.Fail(result.Error.Message, result.Error.Code));
+        var result = await dispatcher.SendAsync(
+            new UpdateProductCommand(
+                id, request.Name, request.CategoryTableId,
+                request.CategoryCode, request.UnitPrice, request.MinStock, request.MaxStock),
+            ct);
 
-        return NoContent();
+        return result.ToActionResult(this);
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken ct = default)
+    public async Task<IActionResult> Delete(
+        Guid id,
+        CancellationToken ct = default)
     {
-        var result = await deleteProductHandler.HandleAsync(new DeleteProductCommand(id), ct);
-        if (result.IsFailure)
-            return result.Error.Code == "PRODUCT_NOT_FOUND"
-                ? NotFound(ApiResponse.Fail(result.Error.Message, result.Error.Code))
-                : BadRequest(ApiResponse.Fail(result.Error.Message, result.Error.Code));
+        var result = await dispatcher.SendAsync(new DeleteProductCommand(id), ct);
 
-        return NoContent();
+        return result.ToActionResult(this);
     }
 
     [HttpPost("{id:guid}/movements")]
-    public async Task<IActionResult> RegisterMovement(Guid id, [FromBody] RegisterMovementRequest request, CancellationToken ct = default)
+    public async Task<IActionResult> RegisterMovement(
+        Guid id,
+        [FromBody] RegisterMovementRequest request,
+        CancellationToken ct = default)
     {
-        var command = new RegisterMovementCommand(id, request.Type, request.Quantity);
-        var result = await registerMovementHandler.HandleAsync(command, ct);
-        if (result.IsFailure)
-            return result.Error.Code == "PRODUCT_NOT_FOUND"
-                ? NotFound(ApiResponse.Fail(result.Error.Message, result.Error.Code))
-                : BadRequest(ApiResponse.Fail(result.Error.Message, result.Error.Code));
+        var result = await dispatcher.SendAsync(
+            new RegisterMovementCommand(id, request.Type, request.Quantity, request.Reason), ct);
 
-        return CreatedAtAction(
-            nameof(GetMovements),
-            new { id },
-            ApiResponse<object>.Ok(result.Value));
+        return result.ToActionResult(this,
+            value => CreatedAtAction(nameof(GetMovements), new { id }, ApiResponse<object>.Ok(value)));
     }
 
     [HttpGet("{id:guid}/movements")]
-    public async Task<IActionResult> GetMovements(Guid id, CancellationToken ct = default)
+    public async Task<IActionResult> GetMovements(
+        Guid id,
+        CancellationToken ct = default)
     {
-        var result = await getMovementsHandler.HandleAsync(new GetMovementsQuery(id), ct);
-        if (result.IsFailure)
-            return result.Error.Code == "PRODUCT_NOT_FOUND"
-                ? NotFound(ApiResponse.Fail(result.Error.Message, result.Error.Code))
-                : BadRequest(ApiResponse.Fail(result.Error.Message, result.Error.Code));
+        var result = await dispatcher.QueryAsync(new GetMovementsQuery(id), ct);
 
-        return Ok(ApiResponse<object>.Ok(result.Value));
+        return result.ToActionResult(this);
     }
 }
-
-public sealed record UpdateProductRequest(string Name, string Category, decimal UnitPrice);
-public sealed record RegisterMovementRequest(string Type, int Quantity);

@@ -2,6 +2,7 @@
 @inject AuthService Auth
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
+@implements IAsyncDisposable
 
 <div id="layout-wrapper">
 
@@ -16,6 +17,7 @@
             <div class="topbar-right">
                 <AuthorizeView>
                     <Authorized>
+                        <NotificationBell />
                         <div class="topbar-user">
                             <div class="avatar">@GetInitial(context.User.Identity?.Name)</div>
                             <span class="d-none d-md-inline">@context.User.Identity?.Name</span>
@@ -44,8 +46,70 @@
 </div>
 
 @code {
-    private async Task Logout()
+    // Cierra sesión tras 15 minutos sin actividad
+    private const int IdleMinutes    = 15;
+    private const int WarningSeconds = 60;
+
+    private PeriodicTimer? _idleTimer;
+    private CancellationTokenSource _cts = new();
+    private bool _warningShown;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender) return;
+
+        var isAuth = await Auth.IsAuthenticated();
+        if (!isAuth) return;
+
+        _idleTimer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        _ = RunIdleCheckAsync();
+    }
+
+    private async Task RunIdleCheckAsync()
+    {
+        try
+        {
+            while (await _idleTimer!.WaitForNextTickAsync(_cts.Token))
+            {
+                var isAuth = await Auth.IsAuthenticated();
+                if (!isAuth) break;
+
+                var idleSeconds = await JS.InvokeAsync<int>("getIdleSeconds");
+                var idleLimit = IdleMinutes * 60;
+
+                if (idleSeconds >= idleLimit && !_warningShown)
+                {
+                    _warningShown = true;
+                    await ShowIdleWarningAsync();
+                }
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task ShowIdleWarningAsync()
+    {
+        var confirmed = await JS.InvokeAsync<bool>("swalConfirm",
+            "¿Sigues ahí?",
+            $"Tu sesión se cerrará en {WarningSeconds} segundos por inactividad.",
+            "Continuar sesión");
+
+        if (confirmed)
+        {
+            await JS.InvokeVoidAsync("resetIdleTimer");
+            _warningShown = false;
+        }
+        else
+        {
+            await DoLogout();
+        }
+    }
+
+    private async Task Logout() => await DoLogout();
+
+    private async Task DoLogout()
+    {
+        _cts.Cancel();
         await Auth.Logout();
         Navigation.NavigateTo("/login");
     }
@@ -55,4 +119,12 @@
 
     private static string GetInitial(string? name)
         => string.IsNullOrWhiteSpace(name) ? "U" : name[0].ToString().ToUpper();
+
+    public async ValueTask DisposeAsync()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+        _idleTimer?.Dispose();
+        await Task.CompletedTask;
+    }
 }

@@ -2,6 +2,7 @@
 @page "/products/{Id:guid}/edit"
 @attribute [Authorize]
 @inject ProductService Products
+@inject GeneralValueService GeneralValues
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
@@ -58,14 +59,14 @@
 
                         <div class="form-group">
                             <label>Categoría <span class="text-danger">*</span></label>
-                            <select id="editCategorySelect" class="form-control" @onchange="OnCategoryChange">
+                            <select class="form-control" value="@createModel.CategoryCode" @onchange="OnCategoryChange">
                                 <option value="">Seleccionar categoría...</option>
                                 @foreach (var cat in _categories)
                                 {
-                                    <option value="@cat" selected="@(createModel.Category == cat)">@cat</option>
+                                    <option value="@cat.Code">@cat.Description</option>
                                 }
                             </select>
-                            <ValidationMessage For="() => createModel.Category" />
+                            <ValidationMessage For="() => createModel.CategoryCode" />
                         </div>
 
                         <div class="form-group">
@@ -77,6 +78,25 @@
                                 <InputNumber @bind-Value="createModel.UnitPrice" class="form-control" placeholder="0.00" />
                             </div>
                             <ValidationMessage For="() => createModel.UnitPrice" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Stock mínimo</label>
+                                    <InputNumber @bind-Value="createModel.MinStock" class="form-control" min="0" />
+                                    <small class="text-muted" style="font-size:11px;">Alerta de stock bajo bajo este valor</small>
+                                    <ValidationMessage For="() => createModel.MinStock" />
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Stock máximo</label>
+                                    <InputNumber @bind-Value="createModel.MaxStock" class="form-control" min="0" />
+                                    <small class="text-muted" style="font-size:11px;">Referencia de capacidad máxima</small>
+                                    <ValidationMessage For="() => createModel.MaxStock" />
+                                </div>
+                            </div>
                         </div>
 
                         @if (!string.IsNullOrEmpty(errorMessage))
@@ -116,34 +136,36 @@
     private bool saving;
     private string? errorMessage;
 
-    private static readonly List<string> _categories =
-        ["Computadoras", "Perifericos", "Monitores", "Redes", "Almacenamiento", "Audio", "Impresoras", "Otros"];
+    private List<GeneralValueModel> _categories = [];
+    private const int CategoryTableId = 1001;
 
     protected override async Task OnInitializedAsync()
     {
+        loading = true;
+        _categories = await GeneralValues.GetByTableIdAsync(CategoryTableId);
+
         if (Id is not null)
         {
-            loading = true;
             var product = await Products.GetByIdAsync(Id.Value);
             if (product is not null)
             {
-                createModel.Name    = product.Name;
-                createModel.SKU     = product.SKU;
-                createModel.Category = product.Category;
-                createModel.UnitPrice = product.UnitPrice;
+                createModel.Name            = product.Name;
+                createModel.SKU             = product.SKU;
+                createModel.CategoryTableId = product.CategoryTableId;
+                createModel.CategoryCode    = product.CategoryCode;
+                createModel.UnitPrice       = product.UnitPrice;
+                createModel.MinStock        = product.MinStock;
+                createModel.MaxStock        = product.MaxStock;
             }
-            loading = false;
         }
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-            await JS.InvokeVoidAsync("initSelect2", "editCategorySelect", "Seleccionar categoría...");
+        loading = false;
     }
 
     private void OnCategoryChange(ChangeEventArgs e)
-        => createModel.Category = e.Value?.ToString() ?? string.Empty;
+    {
+        createModel.CategoryCode    = e.Value?.ToString() ?? string.Empty;
+        createModel.CategoryTableId = string.IsNullOrEmpty(createModel.CategoryCode) ? 0 : CategoryTableId;
+    }
 
     private async Task HandleSubmit()
     {
@@ -165,9 +187,12 @@
         {
             var result = await Products.UpdateAsync(Id.Value, new UpdateProductRequest
             {
-                Name = createModel.Name,
-                Category = createModel.Category,
-                UnitPrice = createModel.UnitPrice
+                Name            = createModel.Name,
+                CategoryTableId = createModel.CategoryTableId,
+                CategoryCode    = createModel.CategoryCode,
+                UnitPrice       = createModel.UnitPrice,
+                MinStock        = createModel.MinStock,
+                MaxStock        = createModel.MaxStock
             });
             if (result is not null)
             {

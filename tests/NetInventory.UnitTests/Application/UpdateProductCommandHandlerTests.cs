@@ -35,12 +35,13 @@ public sealed class UpdateProductCommandHandlerTests
     public async Task HandleAsync_WithValidCommand_ReturnsSuccess()
     {
         var product = ApplicationTestHelpers.CreateProduct();
-        _productRepo.Setup(r => r.GetByIdAsync(product.Id, It.IsAny<CancellationToken>())).ReturnsAsync(product);
+        _currentUser.Setup(s => s.GetCurrentUserId()).Returns("owner-1");
+        _productRepo.Setup(r => r.GetByIdAsync(product.Id, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(product);
         _productRepo.Setup(r => r.UpdateAsync(product, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
         _currentUser.Setup(s => s.GetCurrentUser()).Returns("editor");
 
-        var command = new UpdateProductCommand(product.Id, "Updated Name", "NewCat", 25m);
+        var command = new UpdateProductCommand(product.Id, "Updated Name", 1001, "002", 25m, 5, 100);
         var handler = CreateHandler();
 
         var result = await handler.HandleAsync(command);
@@ -53,21 +54,22 @@ public sealed class UpdateProductCommandHandlerTests
     public async Task HandleAsync_WithNonExistentProduct_ReturnsProductNotFoundError()
     {
         var id = Guid.NewGuid();
-        _productRepo.Setup(r => r.GetByIdAsync(id, It.IsAny<CancellationToken>())).ReturnsAsync((NetInventory.Domain.Entities.Product?)null);
+        _currentUser.Setup(s => s.GetCurrentUserId()).Returns("owner-1");
+        _productRepo.Setup(r => r.GetByIdAsync(id, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((NetInventory.Domain.Entities.Product?)null);
 
-        var command = new UpdateProductCommand(id, "Updated Name", "Cat", 25m);
+        var command = new UpdateProductCommand(id, "Updated Name", 1001, "001", 25m, 0, 0);
         var handler = CreateHandler();
 
         var result = await handler.HandleAsync(command);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Error.ProductNotFound);
+        result.Error.Should().Be(Error.Product.NotFound);
     }
 
     [Fact]
     public async Task HandleAsync_WithInvalidCommand_ReturnsValidationError()
     {
-        var command = new UpdateProductCommand(Guid.NewGuid(), "", "Cat", 25m);
+        var command = new UpdateProductCommand(Guid.NewGuid(), "", 1001, "001", 25m, 0, 0);
         var handler = CreateHandler();
 
         var result = await handler.HandleAsync(command);

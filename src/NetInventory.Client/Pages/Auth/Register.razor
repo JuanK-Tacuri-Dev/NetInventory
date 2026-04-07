@@ -3,39 +3,70 @@
 @inject AuthService Auth
 @inject NavigationManager Navigation
 
-<PageTitle>Registro - NetInventory</PageTitle>
+<PageTitle>Crear cuenta - NetInventory</PageTitle>
 
-<div style="max-width:400px;margin:60px auto;">
-    <h2 style="margin-bottom:24px;">Crear cuenta</h2>
-
-    <EditForm Model="model" OnValidSubmit="HandleRegister">
-        <DataAnnotationsValidator />
-
-        <div style="margin-bottom:16px;">
-            <label>Email</label>
-            <InputText @bind-Value="model.Email" style="display:block;width:100%;padding:8px;margin-top:4px;" />
-            <ValidationMessage For="() => model.Email" />
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="login-card-header">
+            <h2>Net<span>Inventory</span></h2>
+            <p>Crear nueva cuenta</p>
         </div>
+        <div class="login-card-body">
+            <EditForm Model="model" OnValidSubmit="HandleRegister">
+                <DataAnnotationsValidator />
 
-        <div style="margin-bottom:16px;">
-            <label>Contraseña</label>
-            <InputText type="password" @bind-Value="model.Password" style="display:block;width:100%;padding:8px;margin-top:4px;" />
-            <ValidationMessage For="() => model.Password" />
+                <div class="form-group">
+                    <label>Correo electrónico</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white"><i class="bi bi-envelope" style="color:#1b6ec2;"></i></span>
+                        </div>
+                        <InputText Value="@model.Email"
+                                   ValueChanged="@(v => model.Email = (v ?? string.Empty).Replace(" ", string.Empty))"
+                                   ValueExpression="@(() => model.Email)"
+                                   class="form-control" placeholder="usuario@empresa.com" />
+                    </div>
+                    <ValidationMessage For="() => model.Email" />
+                </div>
+
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white"><i class="bi bi-lock" style="color:#1b6ec2;"></i></span>
+                        </div>
+                        <InputText type="password" @bind-Value="model.Password" class="form-control" placeholder="Mínimo 8 caracteres" />
+                    </div>
+                    <ValidationMessage For="() => model.Password" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger py-2 mb-3" style="font-size:12px;">
+                        <i class="bi bi-exclamation-circle mr-1"></i> @errorMessage
+                    </div>
+                }
+
+                <button type="submit" disabled="@loading" class="btn btn-primary btn-block" style="padding:10px;">
+                    @if (loading)
+                    {
+                        <span class="spinner-border spinner-border-sm mr-2" role="status"></span>
+                        <span>Creando cuenta...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-person-plus mr-2"></i>
+                        <span>Crear cuenta</span>
+                    }
+                </button>
+            </EditForm>
+
+            <div class="text-center mt-3">
+                <span style="font-size:12px;color:#6c757d;">¿Ya tienes cuenta?</span>
+                <a href="/login" style="font-size:12px;font-weight:600;color:#1b6ec2;"> Inicia sesión</a>
+            </div>
         </div>
-
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div style="color:#dc3545;margin-bottom:12px;">@errorMessage</div>
-        }
-
-        <button type="submit" disabled="@loading" style="padding:8px 24px;cursor:pointer;">
-            @(loading ? "Cargando..." : "Registrarse")
-        </button>
-    </EditForm>
-
-    <p style="margin-top:16px;">
-        ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
-    </p>
+    </div>
 </div>
 
 @code {
@@ -47,12 +78,13 @@
     {
         loading = true;
         errorMessage = null;
-        var success = await Auth.Register(model);
+        model.Email = model.Email.Trim();
+        var error = await Auth.Register(model);
         loading = false;
 
-        if (success)
+        if (error is null)
             Navigation.NavigateTo("/login");
         else
-            errorMessage = "No se pudo crear la cuenta. Intenta con otro email.";
+            errorMessage = error;
     }
 }

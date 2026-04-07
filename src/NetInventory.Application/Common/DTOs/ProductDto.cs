@@ -4,8 +4,12 @@ public sealed record ProductDto(
     Guid Id,
     string Name,
     string SKU,
-    string Category,
+    int CategoryTableId,
+    string CategoryCode,
+    string CategoryDescription,
     int QuantityInStock,
+    int MinStock,
+    int MaxStock,
     decimal UnitPrice,
     DateTime CreatedAt,
     bool IsLowStock);
