@@ -63,11 +63,6 @@ builder.Services.AddCors(o =>
         .SetIsOriginAllowed(_ => true)
         .AllowAnyHeader()
         .AllowAnyMethod());
-
-    o.AddPolicy(NetInventory.Api.Constants.Cors.Prod, p => p
-        .WithOrigins(builder.Configuration["AllowedOrigins"] ?? "http://localhost:8080")
-        .AllowAnyHeader()
-        .AllowAnyMethod());
 });
 
 var app = builder.Build();
@@ -82,7 +77,7 @@ using (var scope = app.Services.CreateScope())
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<AuditMiddleware>();
 app.UseMiddleware<GlobalExceptionMiddleware>();
-app.UseCors(app.Environment.IsDevelopment() ? NetInventory.Api.Constants.Cors.Dev : NetInventory.Api.Constants.Cors.Prod);
+app.UseCors(NetInventory.Api.Constants.Cors.Dev);
 
 if (app.Environment.IsDevelopment())
 {

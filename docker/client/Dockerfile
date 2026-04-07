@@ -4,8 +4,8 @@ COPY ["src/NetInventory.Client/NetInventory.Client.csproj", "src/NetInventory.Cl
 RUN dotnet restore "src/NetInventory.Client/NetInventory.Client.csproj"
 COPY . .
 WORKDIR "/src/src/NetInventory.Client"
-RUN dotnet publish "NetInventory.Client.csproj" -c Release -o /app/publish --no-restore
+RUN dotnet publish "NetInventory.Client.csproj" -c Release -o /app/publish
 
 FROM nginx:alpine AS final
 COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
-COPY src/NetInventory.Client/nginx.conf /etc/nginx/nginx.conf
+COPY docker/client/nginx.conf /etc/nginx/nginx.conf

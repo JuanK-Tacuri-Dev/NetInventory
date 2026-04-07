@@ -18,8 +18,8 @@ services:
 
   api:
     build:
-      context: .
-      dockerfile: src/NetInventory.Api/Dockerfile
+      context: ../
+      dockerfile: docker/api/Dockerfile
     ports:
       - "5001:5001"
     environment:
@@ -34,8 +34,8 @@ services:
 
   client:
     build:
-      context: .
-      dockerfile: src/NetInventory.Client/Dockerfile
+      context: ../
+      dockerfile: docker/client/Dockerfile
     ports:
       - "8080:80"
     depends_on:

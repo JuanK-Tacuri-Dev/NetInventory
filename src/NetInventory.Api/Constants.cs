@@ -4,8 +4,7 @@ public static class Constants
 {
     public static class Cors
     {
-        public const string Dev  = "Dev";
-        public const string Prod = "Prod";
+        public const string Dev = "AllowAll";
     }
 
     public static class Headers

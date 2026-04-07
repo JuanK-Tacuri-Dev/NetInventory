@@ -8,13 +8,14 @@ COPY ["src/NetInventory.Api/NetInventory.Api.csproj", "src/NetInventory.Api/"]
 COPY ["src/NetInventory.Application/NetInventory.Application.csproj", "src/NetInventory.Application/"]
 COPY ["src/NetInventory.Infrastructure/NetInventory.Infrastructure.csproj", "src/NetInventory.Infrastructure/"]
 COPY ["src/NetInventory.Domain/NetInventory.Domain.csproj", "src/NetInventory.Domain/"]
+COPY ["src/NetInventory.Resources/NetInventory.Resources.csproj", "src/NetInventory.Resources/"]
 RUN dotnet restore "src/NetInventory.Api/NetInventory.Api.csproj"
 COPY . .
 WORKDIR "/src/src/NetInventory.Api"
 RUN dotnet build "NetInventory.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "NetInventory.Api.csproj" -c Release -o /app/publish --no-restore
+RUN dotnet publish "NetInventory.Api.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
