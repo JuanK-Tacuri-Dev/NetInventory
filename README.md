@@ -85,6 +85,112 @@ docker compose -f docker/docker-compose.yml down
 docker compose -f docker/docker-compose.yml down -v
 ```
 
+---
+
+## Modos de ejecución — SQLite vs SQL Server
+
+El proyecto detecta automáticamente qué base de datos usar según el valor de `CONNECTION_STRING`. No hay cambios de código — solo configuración.
+
+### Modo debug / desarrollo local → SQLite
+
+Ideal cuando quieres depurar el código con Visual Studio o Rider. No necesitas Docker ni SQL Server instalado.
+
+**1. Verifica que `.env` tenga SQLite activo:**
+```
+# SQLite (desarrollo local):
+CONNECTION_STRING=Data Source=inventory.db
+
+# SQL Server (Docker):
+# CONNECTION_STRING=Server=sqlserver;...   ← comentado
+```
+
+**2. Abre dos terminales:**
+
+```bash
+# Terminal 1 — API
+dotnet run --project src/NetInventory.Api
+# La API arranca en https://localhost:5001
+# SQLite crea el archivo inventory.db automáticamente en la raíz
+# Las migraciones y el seeder se aplican solos
+
+# Terminal 2 — Cliente Blazor
+dotnet run --project src/NetInventory.Client
+# El cliente arranca en https://localhost:5002
+```
+
+**3. Para depurar con breakpoints** abre el proyecto en Visual Studio / Rider y presiona F5 — el debugger se conecta normalmente.
+
+> El archivo `inventory.db` se crea en la raíz del proyecto. Si quieres empezar desde cero, simplemente bórralo y vuelve a iniciar la API.
+
+---
+
+### Modo producción / SQL Server → Docker
+
+Ideal para probar el proyecto tal como correría en producción, con SQL Server real.
+
+**1. Verifica que `.env` tenga SQL Server activo:**
+```
+# SQLite (desarrollo local):
+# CONNECTION_STRING=Data Source=inventory.db   ← comentado
+
+# SQL Server (Docker):
+CONNECTION_STRING=Server=sqlserver;Database=NetInventory;User Id=sa;Password=DevStrong@Password123;TrustServerCertificate=True
+
+SA_PASSWORD=DevStrong@Password123
+JWT_SECRET=dev-local-secret-key-minimum-32-chars!!
+```
+
+**2. Levantar todos los servicios:**
+
+```bash
+# Primera vez — construye las imágenes y levanta
+docker compose -f docker/docker-compose.yml --env-file .env up --build -d
+
+# Siguientes veces — solo levanta (ya están construidas)
+docker compose -f docker/docker-compose.yml --env-file .env up -d
+```
+
+**3. Verificar que todo está corriendo:**
+
+```bash
+docker ps
+# Deben aparecer: docker-sqlserver-1 (healthy), docker-api-1, docker-client-1
+```
+
+**4. Acceder:**
+
+| Servicio | URL |
+|---|---|
+| UI Blazor | http://localhost:8080 |
+| API + Swagger | http://localhost:5001/swagger |
+| SQL Server (SSMS) | `127.0.0.1,1433` / usuario `sa` |
+
+**5. Detener:**
+
+```bash
+# Detener conservando los datos de la BD
+docker compose -f docker/docker-compose.yml down
+
+# Detener y borrar la BD (empezar desde cero)
+docker compose -f docker/docker-compose.yml down -v
+```
+
+---
+
+### Comparativa rápida
+
+| | SQLite local | Docker + SQL Server |
+|---|---|---|
+| **Requisitos** | .NET 8 SDK | Docker Desktop |
+| **Base de datos** | Archivo `inventory.db` | SQL Server 2022 en contenedor |
+| **Debug con breakpoints** | Sí — F5 en IDE | No directamente |
+| **Velocidad de inicio** | Inmediata | ~30s (SQL Server tarda en arrancar) |
+| **Datos persisten** | Sí (archivo local) | Sí (volumen Docker) |
+| **Resetear BD** | Borrar `inventory.db` | `docker compose down -v` |
+| **Ideal para** | Desarrollo y debug diario | Validar en entorno productivo |
+
+---
+
 ### Primer acceso
 
 Registrar un usuario desde la pantalla `/register` o via API:
