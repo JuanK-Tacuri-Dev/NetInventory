@@ -2,7 +2,7 @@ using NetInventory.Client.Models;
 
 namespace NetInventory.Client.Services;
 
-public sealed class ErrorLogService(ApiClient api)
+public sealed class ErrorLogService(ApiClientService api)
 {
     public async Task<PagedResult<ErrorLogModel>> GetPagedAsync(int page = 1, int pageSize = 10)
         => await api.GetAsync<PagedResult<ErrorLogModel>>(

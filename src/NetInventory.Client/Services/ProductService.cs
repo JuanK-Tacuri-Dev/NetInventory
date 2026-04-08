@@ -3,7 +3,7 @@ using NetInventory.Client.Models;
 
 namespace NetInventory.Client.Services;
 
-public sealed class ProductService(ApiClient api)
+public sealed class ProductService(ApiClientService api)
 {
     public async Task<List<ProductModel>> GetAllAsync(string? categoryCode = null, bool lowStockOnly = false)
     {

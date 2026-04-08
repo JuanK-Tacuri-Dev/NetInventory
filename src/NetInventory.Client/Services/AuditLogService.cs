@@ -2,7 +2,7 @@ using NetInventory.Client.Models;
 
 namespace NetInventory.Client.Services;
 
-public sealed class AuditLogService(ApiClient api)
+public sealed class AuditLogService(ApiClientService api)
 {
     public async Task<PagedResult<AuditLogModel>> GetPagedAsync(int page = 1, int pageSize = 50)
         => await api.GetAsync<PagedResult<AuditLogModel>>(

@@ -2,7 +2,7 @@ using NetInventory.Client.Models;
 
 namespace NetInventory.Client.Services;
 
-public sealed class AuditConfigService(ApiClient api)
+public sealed class AuditConfigService(ApiClientService api)
 {
     public async Task<List<AuditConfigModel>> GetAllAsync()
         => await api.GetAsync<List<AuditConfigModel>>(Constants.Api.AuditConfigs) ?? [];

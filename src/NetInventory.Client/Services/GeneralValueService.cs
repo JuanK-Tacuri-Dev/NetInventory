@@ -2,7 +2,7 @@ using NetInventory.Client.Models;
 
 namespace NetInventory.Client.Services;
 
-public sealed class GeneralValueService(ApiClient api)
+public sealed class GeneralValueService(ApiClientService api)
 {
     private readonly Dictionary<int, List<GeneralValueModel>> _cache = [];
 

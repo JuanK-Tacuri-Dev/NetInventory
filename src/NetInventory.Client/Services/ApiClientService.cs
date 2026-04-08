@@ -9,7 +9,7 @@ namespace NetInventory.Client.Services;
 /// Centraliza toda la comunicación HTTP autenticada con la API.
 /// Usa headers por mensaje (no DefaultRequestHeaders) para evitar race conditions en async/await.
 /// </summary>
-public sealed class ApiClient(HttpClient http, AuthService auth)
+public sealed class ApiClientService(HttpClient http, AuthService auth)
 {
     private async Task<HttpRequestMessage> BuildAsync(HttpMethod method, string url, object? body = null)
     {
