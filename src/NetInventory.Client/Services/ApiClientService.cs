@@ -1,12 +1,19 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Components;
 using NetInventory.Client.Models;
 
 namespace NetInventory.Client.Services;
 
-public sealed class ApiClientService(HttpClient http, TokenStoreService tokenStore)
+public sealed class ApiClientService(HttpClient http, TokenStoreService tokenStore, NavigationManager navigation)
 {
+    private async Task HandleUnauthorizedAsync()
+    {
+        await tokenStore.ClearAsync();
+        navigation.NavigateTo("/login", forceLoad: true);
+    }
+
     private async Task<HttpRequestMessage> BuildAsync(HttpMethod method, string url, object? body = null)
     {
         var token = await tokenStore.GetTokenAsync();
@@ -28,6 +35,7 @@ public sealed class ApiClientService(HttpClient http, TokenStoreService tokenSto
         {
             using var req = await BuildAsync(HttpMethod.Get, url);
             using var res = await http.SendAsync(req);
+            if (res.StatusCode == HttpStatusCode.Unauthorized) { await HandleUnauthorizedAsync(); return default; }
             if (!res.IsSuccessStatusCode) return default;
             var result = await res.Content.ReadFromJsonAsync<ApiResponse<T>>();
             return result is { Success: true } ? result.Data : default;
@@ -41,6 +49,7 @@ public sealed class ApiClientService(HttpClient http, TokenStoreService tokenSto
         {
             using var req = await BuildAsync(HttpMethod.Post, url, body);
             using var res = await http.SendAsync(req);
+            if (res.StatusCode == HttpStatusCode.Unauthorized) { await HandleUnauthorizedAsync(); return default; }
             if (!res.IsSuccessStatusCode) return default;
             var result = await res.Content.ReadFromJsonAsync<ApiResponse<T>>();
             return result is { Success: true } ? result.Data : default;
@@ -54,6 +63,7 @@ public sealed class ApiClientService(HttpClient http, TokenStoreService tokenSto
         {
             using var req = await BuildAsync(HttpMethod.Post, url, body);
             using var res = await http.SendAsync(req);
+            if (res.StatusCode == HttpStatusCode.Unauthorized) { await HandleUnauthorizedAsync(); return false; }
             return res.IsSuccessStatusCode;
         }
         catch { return false; }
@@ -65,6 +75,7 @@ public sealed class ApiClientService(HttpClient http, TokenStoreService tokenSto
         {
             using var req = await BuildAsync(HttpMethod.Post, url, body);
             using var res = await http.SendAsync(req);
+            if (res.StatusCode == HttpStatusCode.Unauthorized) { await HandleUnauthorizedAsync(); return (default, res.StatusCode, null); }
             if (!res.IsSuccessStatusCode)
             {
                 var err = await res.Content.ReadFromJsonAsync<ApiResponse<T>>();
@@ -82,6 +93,7 @@ public sealed class ApiClientService(HttpClient http, TokenStoreService tokenSto
         {
             using var req = await BuildAsync(HttpMethod.Put, url, body);
             using var res = await http.SendAsync(req);
+            if (res.StatusCode == HttpStatusCode.Unauthorized) { await HandleUnauthorizedAsync(); return default; }
             if (!res.IsSuccessStatusCode) return default;
             var result = await res.Content.ReadFromJsonAsync<ApiResponse<T>>();
             return result is { Success: true } ? result.Data : default;
@@ -95,6 +107,7 @@ public sealed class ApiClientService(HttpClient http, TokenStoreService tokenSto
         {
             using var req = await BuildAsync(HttpMethod.Put, url, body);
             using var res = await http.SendAsync(req);
+            if (res.StatusCode == HttpStatusCode.Unauthorized) { await HandleUnauthorizedAsync(); return false; }
             return res.IsSuccessStatusCode;
         }
         catch { return false; }
@@ -106,6 +119,7 @@ public sealed class ApiClientService(HttpClient http, TokenStoreService tokenSto
         {
             using var req = await BuildAsync(HttpMethod.Delete, url);
             using var res = await http.SendAsync(req);
+            if (res.StatusCode == HttpStatusCode.Unauthorized) { await HandleUnauthorizedAsync(); return false; }
             return res.IsSuccessStatusCode;
         }
         catch { return false; }
@@ -117,18 +131,12 @@ public sealed class ApiClientService(HttpClient http, TokenStoreService tokenSto
         {
             using var req = await BuildAsync(HttpMethod.Patch, url, body);
             using var res = await http.SendAsync(req);
+            if (res.StatusCode == HttpStatusCode.Unauthorized) { await HandleUnauthorizedAsync(); return false; }
             return res.IsSuccessStatusCode;
         }
         catch { return false; }
     }
 
-    // ── PUBLIC (sin token) — exclusivo para AuthService ────────────────────
-
-    /// <summary>
-    /// POST sin cabecera de autenticación.
-    /// Usado por AuthService para login/register/refresh (endpoints públicos).
-    /// Retorna (Data, Success, Error) para que AuthService maneje cada caso.
-    /// </summary>
     public async Task<(T? Data, bool Success, string? Error)> PostPublicAsync<T>(string url, object body) where T : class
     {
         try

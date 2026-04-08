@@ -1,15 +1,34 @@
-<Router AppAssembly="typeof(App).Assembly">
-    <Found Context="routeData">
-        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
-            <NotAuthorized>
-                <RedirectToLogin />
-            </NotAuthorized>
-        </AuthorizeRouteView>
-    </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="typeof(MainLayout)">
-            <p role="alert">Nothing at this address.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
+@inject TokenStoreService TokenStore
+@inject ApiClientService Api
+
+@if (_ready)
+{
+    <Router AppAssembly="typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
+                <NotAuthorized>
+                    <RedirectToLogin />
+                </NotAuthorized>
+            </AuthorizeRouteView>
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="typeof(MainLayout)">
+                <p role="alert">Nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+}
+
+@code {
+    private bool _ready;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await TokenStore.GetRawTokenAsync();
+        if (!string.IsNullOrWhiteSpace(token))
+            await Api.GetAsync<object>(Constants.Api.Ping);
+
+        _ready = true;
+    }
+}

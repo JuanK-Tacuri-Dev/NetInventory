@@ -14,6 +14,7 @@ public static class Constants
         public const string Login    = "/api/auth/login";
         public const string Register = "/api/auth/register";
         public const string Refresh  = "/api/auth/refresh";
+        public const string Ping     = "/api/auth/ping";
 
         public const string Products      = "/api/products";
         public const string ProductsPaged = "/api/products/paged";

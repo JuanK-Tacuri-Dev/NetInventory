@@ -85,6 +85,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IDispatcher, Dispatcher>();
+        services.AddSingleton<ServerBootService>();
         services.AddSingleton<IAuditConfigCache, AuditConfigCache>();
         services.AddSingleton<ICacheService, CacheService>();
         var cacheSettings = configuration.GetSection("CacheSettings").Get<CacheSettings>() ?? new CacheSettings();

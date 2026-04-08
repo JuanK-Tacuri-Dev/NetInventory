@@ -8,7 +8,7 @@ using NetInventory.Resources;
 
 namespace NetInventory.Infrastructure.Services;
 
-public sealed class TokenService(IConfiguration configuration) : ITokenService
+public sealed class TokenService(IConfiguration configuration, ServerBootService serverBoot) : ITokenService
 {
     public (string Token, DateTime ExpiresAt) GenerateToken(string userId, string email)
     {
@@ -26,7 +26,8 @@ public sealed class TokenService(IConfiguration configuration) : ITokenService
         {
             new Claim(ClaimTypes.NameIdentifier, userId),
             new Claim(ClaimTypes.Email, email),
-            new Claim(ClaimTypes.Name, email)
+            new Claim(ClaimTypes.Name, email),
+            new Claim("boot_id", serverBoot.BootId.ToString())
         };
 
         var jwtObj = new JwtSecurityToken(

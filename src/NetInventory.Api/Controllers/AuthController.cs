@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NetInventory.Api.Common;
 using NetInventory.Api.Common.Extensions;
@@ -15,6 +16,10 @@ public sealed class AuthController(
     IDispatcher dispatcher
     ) : ControllerBase
 {
+    /// <summary>Valida que el token actual sea aceptado por el servidor.</summary>
+    [HttpGet("ping")]
+    [Authorize]
+    public IActionResult Ping() => Ok(ApiResponse.Ok());
     [HttpPost("register")]
     public async Task<IActionResult> Register(
         [FromBody] RegisterRequest request,

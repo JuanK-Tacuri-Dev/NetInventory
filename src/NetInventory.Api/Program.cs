@@ -7,6 +7,7 @@ using NetInventory.Api.Middleware;
 using NetInventory.Application;
 using NetInventory.Infrastructure;
 using NetInventory.Infrastructure.Persistence;
+using NetInventory.Infrastructure.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,6 +48,17 @@ builder.Services
             ValidAudience = jwtSettings["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(jwtSecret))
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = ctx =>
+            {
+                var boot = ctx.HttpContext.RequestServices.GetRequiredService<ServerBootService>();
+                var claim = ctx.Principal?.FindFirst("boot_id")?.Value;
+                if (claim != boot.BootId.ToString())
+                    ctx.Fail("Token de sesión expirado. Inicie sesión nuevamente.");
+                return Task.CompletedTask;
+            }
         };
     });
 
