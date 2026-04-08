@@ -23,6 +23,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         SqlMapper.AddTypeHandler(new NetInventory.Infrastructure.Persistence.ReadModel.GuidTypeHandler());
+        SqlMapper.AddTypeHandler(new NetInventory.Infrastructure.Persistence.ReadModel.DecimalTypeHandler());
 
         var connectionString = configuration.GetConnectionString("Default")
             ?? "Data Source=inventory.db";
