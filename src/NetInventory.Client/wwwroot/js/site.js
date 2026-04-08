@@ -1,6 +1,4 @@
-// ============================================================
-// NetInventory — jQuery / Plugin utilities for Blazor interop
-// ============================================================
+
 
 // Select2 —————————————————————————————————————————————————————
 window.initSelect2 = function (id, placeholder) {
