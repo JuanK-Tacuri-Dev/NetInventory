@@ -19,8 +19,6 @@ services:
     build:
       context: ../
       dockerfile: docker/api/Dockerfile
-    ports:
-      - "5001:5001"
     environment:
       - ASPNETCORE_URLS=http://+:5001
       - ConnectionStrings__Default=${CONNECTION_STRING}
