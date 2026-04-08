@@ -17,6 +17,7 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthService>());
 builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<ApiClient>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<GeneralValueService>();
 builder.Services.AddScoped<ErrorLogService>();
