@@ -8,16 +8,22 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
+// HttpClient — solo ApiClientService lo usa directamente
 builder.Services.AddScoped(sp =>
 {
     var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:5001";
     return new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
 });
 
+// Lazy<ApiClientService> para romper el ciclo: TokenStoreService → ApiClientService
+builder.Services.AddScoped(sp => new Lazy<ApiClientService>(sp.GetRequiredService<ApiClientService>));
+
+builder.Services.AddScoped<TokenStoreService>();
+builder.Services.AddScoped<ApiClientService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthService>());
 builder.Services.AddAuthorizationCore();
-builder.Services.AddScoped<ApiClientService>();
+
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<GeneralValueService>();
 builder.Services.AddScoped<ErrorLogService>();

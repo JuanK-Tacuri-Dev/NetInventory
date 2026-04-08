@@ -43,7 +43,7 @@
                         <div class="notif-item" @onclick='() => GoToProduct(p.Id)'>
                             <div class="notif-item-info">
                                 <span class="notif-item-name">@p.Name</span>
-                                <code class="notif-item-sku">@p.SKU</code>
+                                <code class="notif-item-sku">@p.SKU</code>x
                             </div>
                             <span class="notif-item-stock @(p.QuantityInStock == 0 ? "notif-stock-zero" : "notif-stock-low")">
                                 @p.QuantityInStock uds.

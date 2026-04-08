@@ -8,21 +8,23 @@ public sealed class AuditConfigService(ApiClientService api)
         => await api.GetAsync<List<AuditConfigModel>>(Constants.Api.AuditConfigs) ?? [];
 
     public async Task<bool> CreateAsync(AuditConfigModel model)
-        => await api.PostAsync(Constants.Api.AuditConfigs, new
-        {
-            method     = model.Method,
-            urlPattern = model.UrlPattern,
-            description = model.Description
-        });
+        => await api.PostAsync(Constants.Api.AuditConfigs,
+            new
+            {
+                method = model.Method,
+                urlPattern = model.UrlPattern,
+                description = model.Description
+            });
 
     public async Task<bool> UpdateAsync(AuditConfigModel model)
-        => await api.PutAsync($"{Constants.Api.AuditConfigs}/{model.Id}", new
-        {
-            id          = model.Id,
-            method      = model.Method,
-            urlPattern  = model.UrlPattern,
-            description = model.Description
-        });
+        => await api.PutAsync($"{Constants.Api.AuditConfigs}/{model.Id}",
+            new
+            {
+                id = model.Id,
+                method = model.Method,
+                urlPattern = model.UrlPattern,
+                description = model.Description
+            });
 
     public async Task<bool> DeleteAsync(Guid id)
         => await api.DeleteAsync($"{Constants.Api.AuditConfigs}/{id}");
