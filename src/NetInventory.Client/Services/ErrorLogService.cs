@@ -11,7 +11,6 @@ public sealed class ErrorLogService(ApiClientService api)
 
     public async Task<bool> SimulateErrorAsync(string message)
     {
-        // Un 500 es el resultado esperado — confirmamos que la solicitud llegó
         var (_, status, _) = await api.PostDetailedAsync<object>(
             Constants.Api.DiagnosticsError, new { message });
         return status == System.Net.HttpStatusCode.InternalServerError

@@ -16,6 +16,7 @@ public sealed class GeneralValueService(ApiClientService api)
                    ?? [];
 
         _cache[tableId] = data;
+
         return data;
     }
 

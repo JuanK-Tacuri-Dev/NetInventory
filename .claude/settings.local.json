@@ -144,7 +144,9 @@
       "Bash(curl -s -X POST http://localhost:5001/api/auth/register -H 'Content-Type: application/json' -d '{\\\\\"email\\\\\":\\\\\"admin@netinventory.com\\\\\",\\\\\"password\\\\\":\\\\\"Admin1234!\\\\\"}')",
       "Bash(echo \"Response: $\\(curl -s -X POST http://localhost:5001/api/auth/register -H 'Content-Type: application/json' -d '{\\\\\"email\\\\\":\\\\\"admin@netinventory.com\\\\\",\\\\\"password\\\\\":\\\\\"Admin1234!\\\\\"}'\\)\")",
       "Bash(curl -s -o /dev/null -w \"HTTP Status: %{http_code}\\\\n\" http://localhost:8080)",
-      "Bash(curl -s -X POST http://localhost:5001/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"admin@netinventory.com\",\"password\":\"Admin1234!\"}')"
+      "Bash(curl -s -X POST http://localhost:5001/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"admin@netinventory.com\",\"password\":\"Admin1234!\"}')",
+      "Bash(git -C /mnt/c/Users/tacu9/source/repos/Personal/Prueba_Blazor add -A)",
+      "Bash(git -C /mnt/c/Users/tacu9/source/repos/Personal/Prueba_Blazor commit -m ':*)"
     ]
   }
 }

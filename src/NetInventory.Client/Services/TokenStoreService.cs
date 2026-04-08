@@ -3,18 +3,11 @@ using NetInventory.Client.Models;
 
 namespace NetInventory.Client.Services;
 
-/// <summary>
-/// Centraliza el ciclo de vida del token JWT:
-/// lectura/escritura en localStorage y renovación automática vía ApiClientService.
-/// </summary>
 public sealed class TokenStoreService(Lazy<ApiClientService> api, IJSRuntime js)
 {
     private static readonly TimeSpan RefreshThreshold = Constants.Auth.RefreshThreshold;
 
-    /// <summary>
-    /// Retorna el token vigente. Si está próximo a expirar, lo renueva automáticamente.
-    /// Llamado por ApiClientService.BuildAsync() antes de cada request autenticado.
-    /// </summary>
+
     public async Task<string?> GetTokenAsync()
     {
         var token = await GetRawTokenAsync();
@@ -25,18 +18,18 @@ public sealed class TokenStoreService(Lazy<ApiClientService> api, IJSRuntime js)
             && DateTime.UtcNow >= expiresAt - RefreshThreshold)
         {
             var refreshed = await TryRefreshAsync();
+
             if (!refreshed) return null;
+
             return await GetRawTokenAsync();
         }
 
         return token;
     }
 
-    /// <summary>Lee el token crudo de localStorage sin verificar expiración.</summary>
     public async Task<string?> GetRawTokenAsync()
         => await js.InvokeAsync<string?>("localStorage.getItem", Constants.LocalStorage.TokenKey);
 
-    /// <summary>Renueva el token usando el refresh token almacenado.</summary>
     public async Task<bool> TryRefreshAsync()
     {
         try
@@ -50,6 +43,7 @@ public sealed class TokenStoreService(Lazy<ApiClientService> api, IJSRuntime js)
             if (!success || data is null) { await ClearAsync(); return false; }
 
             await SaveAsync(data);
+
             return true;
         }
         catch { return false; }
