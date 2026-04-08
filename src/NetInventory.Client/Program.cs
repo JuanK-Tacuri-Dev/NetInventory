@@ -4,11 +4,16 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using NetInventory.Client;
 using NetInventory.Client.Services;
 
+// Forzar cultura invariante para que los números usen siempre punto decimal
+// independientemente de la configuración regional del navegador del usuario.
+var invariant = System.Globalization.CultureInfo.InvariantCulture;
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture   = invariant;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = invariant;
+
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// HttpClient — solo ApiClientService lo usa directamente
 builder.Services.AddScoped(sp =>
 {
     var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:5001";
