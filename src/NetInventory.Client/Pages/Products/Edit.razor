@@ -194,7 +194,7 @@
                 MinStock        = createModel.MinStock,
                 MaxStock        = createModel.MaxStock
             });
-            if (result is not null)
+            if (result)
             {
                 await JS.InvokeVoidAsync("swalSuccess", Labels.Confirm_Updated, Labels.Product_UpdatedOk);
                 Navigation.NavigateTo("/products");

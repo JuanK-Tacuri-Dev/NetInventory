@@ -40,8 +40,8 @@ public sealed class ProductService(ApiClientService api)
     public async Task<ProductModel?> CreateAsync(CreateProductRequest request)
         => await api.PostAsync<ProductModel>(Constants.Api.Products, request);
 
-    public async Task<ProductModel?> UpdateAsync(Guid id, UpdateProductRequest request)
-        => await api.PutAsync<ProductModel>($"{Constants.Api.Products}/{id}", request);
+    public async Task<bool> UpdateAsync(Guid id, UpdateProductRequest request)
+        => await api.PutAsync($"{Constants.Api.Products}/{id}", request);
 
     public async Task<bool> DeleteAsync(Guid id)
         => await api.DeleteAsync($"{Constants.Api.Products}/{id}");
