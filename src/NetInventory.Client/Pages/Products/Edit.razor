@@ -6,15 +6,15 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
-<PageTitle>@(Id is null ? "Nuevo producto" : "Editar producto") - NetInventory</PageTitle>
+<PageTitle>@(Id is null ? Labels.Product_NewTitle : Labels.Product_EditTitle) - NetInventory</PageTitle>
 
 <div class="page-title-box">
     <h4>
         <i class="bi bi-@(Id is null ? "plus-circle" : "pencil-square") mr-2"></i>
-        @(Id is null ? "Nuevo Producto" : "Editar Producto")
+        @(Id is null ? Labels.Product_New : Labels.Product_Edit)
     </h4>
     <a href="/products" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left mr-1"></i> Volver
+        <i class="bi bi-arrow-left mr-1"></i> @Labels.Action_Back
     </a>
 </div>
 
@@ -23,7 +23,7 @@
         <div class="card">
             <div class="card-header">
                 <i class="bi bi-box-seam mr-2"></i>
-                @(Id is null ? "Datos del nuevo producto" : "Modificar datos del producto")
+                @(Id is null ? Labels.Product_NewSubtitle : Labels.Product_EditSubtitle)
             </div>
             <div class="card-body">
                 @if (loading)
@@ -51,7 +51,7 @@
                             @if (Id is not null)
                             {
                                 <small class="text-muted" style="font-size:11px;">
-                                    <i class="bi bi-info-circle mr-1"></i>El SKU no puede modificarse una vez creado.
+                                    <i class="bi bi-info-circle mr-1"></i>@Labels.Product_SkuImmutable
                                 </small>
                             }
                             <ValidationMessage For="() => createModel.SKU" />
@@ -116,10 +116,10 @@
                                 else
                                 {
                                     <i class="bi bi-check-lg mr-1"></i>
-                                    <span>Guardar</span>
+                                    <span>@Labels.Action_Save</span>
                                 }
                             </button>
-                            <a href="/products" class="btn btn-outline-secondary">Cancelar</a>
+                            <a href="/products" class="btn btn-outline-secondary">@Labels.Action_Cancel</a>
                         </div>
                     </EditForm>
                 }
@@ -177,11 +177,11 @@
             var result = await Products.CreateAsync(createModel);
             if (result is not null)
             {
-                await JS.InvokeVoidAsync("swalSuccess", "Producto creado", $"'{result.Name}' fue agregado correctamente.");
+                await JS.InvokeVoidAsync("swalSuccess", Labels.Confirm_Saved, $"'{result.Name}' {Labels.Product_CreatedOk}");
                 Navigation.NavigateTo("/products");
             }
             else
-                errorMessage = "No se pudo crear el producto. Verifica que el SKU no esté duplicado.";
+                errorMessage = Labels.Product_CreateError;
         }
         else
         {
@@ -196,11 +196,11 @@
             });
             if (result is not null)
             {
-                await JS.InvokeVoidAsync("swalSuccess", "Producto actualizado", "Los cambios fueron guardados.");
+                await JS.InvokeVoidAsync("swalSuccess", Labels.Confirm_Updated, Labels.Product_UpdatedOk);
                 Navigation.NavigateTo("/products");
             }
             else
-                errorMessage = "No se pudo actualizar el producto.";
+                errorMessage = Labels.Product_UpdateError;
         }
         saving = false;
     }

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true" />
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter</value></resheader>
+
+  <!-- Acciones comunes -->
+  <data name="Action_Save" xml:space="preserve"><value>Guardar</value></data>
+  <data name="Action_Saving" xml:space="preserve"><value>Guardando...</value></data>
+  <data name="Action_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Action_Back" xml:space="preserve"><value>Volver</value></data>
+  <data name="Action_Delete" xml:space="preserve"><value>Eliminar</value></data>
+  <data name="Action_Edit" xml:space="preserve"><value>Editar</value></data>
+  <data name="Action_Create" xml:space="preserve"><value>Nueva configuración</value></data>
+  <data name="Action_ViewDetail" xml:space="preserve"><value>Ver detalle</value></data>
+  <data name="Action_RegisterMovement" xml:space="preserve"><value>Registrar movimiento</value></data>
+
+  <!-- Estados -->
+  <data name="State_Loading" xml:space="preserve"><value>Cargando...</value></data>
+  <data name="State_LoadingRecords" xml:space="preserve"><value>Cargando registros...</value></data>
+  <data name="State_NoData" xml:space="preserve"><value>No hay datos disponibles</value></data>
+
+  <!-- Productos -->
+  <data name="Product_New" xml:space="preserve"><value>Nuevo Producto</value></data>
+  <data name="Product_Edit" xml:space="preserve"><value>Editar Producto</value></data>
+  <data name="Product_NewTitle" xml:space="preserve"><value>Nuevo producto</value></data>
+  <data name="Product_EditTitle" xml:space="preserve"><value>Editar producto</value></data>
+  <data name="Product_NewSubtitle" xml:space="preserve"><value>Datos del nuevo producto</value></data>
+  <data name="Product_EditSubtitle" xml:space="preserve"><value>Modificar datos del producto</value></data>
+  <data name="Product_DeleteConfirm" xml:space="preserve"><value>¿Eliminar producto?</value></data>
+  <data name="Product_DeleteConfirmMsg" xml:space="preserve"><value>Esta acción eliminará el producto y no se puede deshacer.</value></data>
+  <data name="Product_DeletedOk" xml:space="preserve"><value>Producto eliminado correctamente.</value></data>
+  <data name="Product_CreatedOk" xml:space="preserve"><value>fue agregado correctamente.</value></data>
+  <data name="Product_UpdatedOk" xml:space="preserve"><value>Los cambios fueron guardados.</value></data>
+  <data name="Product_CreateError" xml:space="preserve"><value>No se pudo crear el producto. Verifica que el SKU no esté duplicado.</value></data>
+  <data name="Product_UpdateError" xml:space="preserve"><value>No se pudo actualizar el producto.</value></data>
+  <data name="Product_SkuImmutable" xml:space="preserve"><value>El SKU no puede modificarse una vez creado.</value></data>
+  <data name="Product_NoResults" xml:space="preserve"><value>No se encontraron productos con los filtros aplicados.</value></data>
+  <data name="Product_EmptyList" xml:space="preserve"><value>No hay productos registrados.</value></data>
+
+  <!-- Movimientos -->
+  <data name="Movement_Register" xml:space="preserve"><value>Registrar Movimiento</value></data>
+  <data name="Movement_RegisterFor" xml:space="preserve"><value>Registrar movimiento para</value></data>
+  <data name="Movement_RegisterError" xml:space="preserve"><value>No se pudo registrar el movimiento.</value></data>
+  <data name="Movement_RegisteredOk" xml:space="preserve"><value>Movimiento registrado correctamente.</value></data>
+  <data name="Movement_NoHistory" xml:space="preserve"><value>No hay movimientos registrados para este producto.</value></data>
+
+  <!-- Configuración de Auditoría -->
+  <data name="AuditConfig_New" xml:space="preserve"><value>Nueva configuración</value></data>
+  <data name="AuditConfig_Edit" xml:space="preserve"><value>Editar configuración</value></data>
+  <data name="AuditConfig_DeleteConfirm" xml:space="preserve"><value>¿Eliminar configuración?</value></data>
+  <data name="AuditConfig_DeletedOk" xml:space="preserve"><value>fue eliminada correctamente.</value></data>
+  <data name="AuditConfig_SaveError" xml:space="preserve"><value>No se pudo guardar la configuración. Intente nuevamente.</value></data>
+  <data name="AuditConfig_Empty" xml:space="preserve"><value>No hay configuraciones de auditoría.</value></data>
+  <data name="AuditConfig_CreatedOk" xml:space="preserve"><value>Configuración creada correctamente.</value></data>
+  <data name="AuditConfig_UpdatedOk" xml:space="preserve"><value>Configuración actualizada correctamente.</value></data>
+  <data name="AuditConfig_DeleteError" xml:space="preserve"><value>No se pudo eliminar la configuración.</value></data>
+  <data name="AuditConfig_ToggleError" xml:space="preserve"><value>No se pudo cambiar el estado.</value></data>
+
+  <!-- Productos: acciones adicionales -->
+  <data name="Product_DeleteError" xml:space="preserve"><value>No se pudo eliminar el producto.</value></data>
+
+  <!-- Autenticación -->
+  <data name="Auth_LoginTitle" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="Auth_RegisterTitle" xml:space="preserve"><value>Crear cuenta</value></data>
+  <data name="Auth_LoginButton" xml:space="preserve"><value>Ingresar</value></data>
+  <data name="Auth_RegisterButton" xml:space="preserve"><value>Registrarse</value></data>
+  <data name="Auth_LogoutButton" xml:space="preserve"><value>Cerrar sesión</value></data>
+  <data name="Auth_LoginError" xml:space="preserve"><value>Credenciales incorrectas. Verifica tu email y contraseña.</value></data>
+  <data name="Auth_RegisterError" xml:space="preserve"><value>No se pudo crear la cuenta. Intenta con otro email.</value></data>
+
+  <!-- Confirmar eliminación -->
+  <data name="Confirm_DeleteButton" xml:space="preserve"><value>Sí, eliminar</value></data>
+  <data name="Confirm_Saved" xml:space="preserve"><value>Guardado</value></data>
+  <data name="Confirm_Deleted" xml:space="preserve"><value>Eliminado</value></data>
+  <data name="Confirm_Error" xml:space="preserve"><value>Error</value></data>
+  <data name="Confirm_Updated" xml:space="preserve"><value>Actualizado</value></data>
+</root>

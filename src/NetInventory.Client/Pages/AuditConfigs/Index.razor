@@ -8,7 +8,7 @@
 <div class="page-title-box">
     <h4><i class="bi bi-sliders mr-2"></i>Configuración de Auditoría</h4>
     <button class="btn btn-primary btn-sm" @onclick="OpenCreateModal">
-        <i class="bi bi-plus mr-1"></i> Nueva configuración
+        <i class="bi bi-plus mr-1"></i> @Labels.AuditConfig_New
     </button>
 </div>
 
@@ -26,7 +26,7 @@
         {
             <div class="text-center py-5">
                 <i class="bi bi-sliders" style="font-size:48px;color:#74788d;display:block;"></i>
-                <p class="mt-2 text-muted">No hay configuraciones de auditoría.</p>
+                <p class="mt-2 text-muted">@Labels.AuditConfig_Empty</p>
             </div>
         }
         else
@@ -86,7 +86,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">@(editingConfig.Id == Guid.Empty ? "Nueva configuración" : "Editar configuración")</h5>
+                    <h5 class="modal-title">@(editingConfig.Id == Guid.Empty ? Labels.AuditConfig_New : Labels.AuditConfig_Edit)</h5>
                     <button type="button" class="close" @onclick="CloseModal">
                         <span>&times;</span>
                     </button>
@@ -128,13 +128,13 @@
                         }
 
                         <div class="modal-footer px-0 pb-0">
-                            <button type="button" class="btn btn-outline-secondary" @onclick="CloseModal">Cancelar</button>
+                            <button type="button" class="btn btn-outline-secondary" @onclick="CloseModal">@Labels.Action_Cancel</button>
                             <button type="submit" class="btn btn-primary" disabled="@saving">
                                 @if (saving)
                                 {
                                     <span class="spinner-border spinner-border-sm mr-1"></span>
                                 }
-                                Guardar
+                                @Labels.Action_Save
                             </button>
                         </div>
                     </EditForm>
@@ -198,12 +198,12 @@
             await AuditConfigSvc.InvalidateCacheAsync();
             showModal = false;
             await LoadConfigs();
-            var msg = editingConfig.Id == Guid.Empty ? "Configuración creada correctamente." : "Configuración actualizada correctamente.";
-            await JS.InvokeVoidAsync("swalSuccess", "Guardado", msg);
+            var msg = editingConfig.Id == Guid.Empty ? Labels.AuditConfig_CreatedOk : Labels.AuditConfig_UpdatedOk;
+            await JS.InvokeVoidAsync("swalSuccess", Labels.Confirm_Saved, msg);
         }
         else
         {
-            formError = "No se pudo guardar la configuración. Intente nuevamente.";
+            formError = Labels.AuditConfig_SaveError;
         }
         saving = false;
     }
@@ -216,29 +216,29 @@
         if (ok)
         {
             var estado = configs.FirstOrDefault(c => c.Id == cfg.Id)?.IsEnabled == true ? "activada" : "desactivada";
-            await JS.InvokeVoidAsync("swalSuccess", "Configuración actualizada", $"'{cfg.Description}' fue {estado}.");
+            await JS.InvokeVoidAsync("swalSuccess", Labels.Confirm_Updated, $"'{cfg.Description}' fue {estado}.");
         }
         else
-            await JS.InvokeVoidAsync("swalError", "Error", "No se pudo cambiar el estado.");
+            await JS.InvokeVoidAsync("swalError", Labels.Confirm_Error, Labels.AuditConfig_ToggleError);
     }
 
     private async Task DeleteConfig(AuditConfigModel cfg)
     {
         var confirm = await JS.InvokeAsync<bool>("swalConfirm",
-            "¿Eliminar configuración?",
-            $"Se eliminará '{cfg.Description}'. Esta acción no se puede deshacer.",
-            "Sí, eliminar");
+            Labels.AuditConfig_DeleteConfirm,
+            $"'{cfg.Description}'. {Labels.Product_DeleteConfirmMsg}",
+            Labels.Confirm_DeleteButton);
         if (!confirm) return;
 
         var ok = await AuditConfigSvc.DeleteAsync(cfg.Id);
         await AuditConfigSvc.InvalidateCacheAsync();
         if (ok)
         {
-            await JS.InvokeVoidAsync("swalSuccess", "Configuración eliminada", $"'{cfg.Description}' fue eliminada correctamente.");
+            await JS.InvokeVoidAsync("swalSuccess", Labels.Confirm_Deleted, $"'{cfg.Description}' {Labels.AuditConfig_DeletedOk}");
             await LoadConfigs();
         }
         else
-            await JS.InvokeVoidAsync("swalError", "Error", "No se pudo eliminar la configuración.");
+            await JS.InvokeVoidAsync("swalError", Labels.Confirm_Error, Labels.AuditConfig_DeleteError);
     }
 
     private static string GetMethodColor(string method) => method switch

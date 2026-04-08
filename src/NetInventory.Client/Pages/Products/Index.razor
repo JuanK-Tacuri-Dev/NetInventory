@@ -11,7 +11,7 @@
 <div class="page-title-box">
     <h4><i class="bi bi-box-seam mr-2"></i>Productos</h4>
     <button class="btn btn-principal" @onclick='() => Navigation.NavigateTo("/products/new")'>
-        <i class="bi bi-plus-lg mr-1"></i> Nuevo Producto
+        <i class="bi bi-plus-lg mr-1"></i> @Labels.Product_New
     </button>
 </div>
 
@@ -96,7 +96,7 @@
         {
             <div class="text-center py-5">
                 <div class="spinner-border" style="color:#24356a;" role="status"></div>
-                <p class="mt-2 text-muted" style="font-size:12px;">Cargando...</p>
+                <p class="mt-2 text-muted" style="font-size:12px;">@Labels.State_Loading</p>
             </div>
         }
         else
@@ -150,7 +150,7 @@
                             <tr>
                                 <td colspan="6" class="text-center py-4">
                                     <i class="bi bi-inbox" style="font-size:36px;color:#ced4da;display:block;"></i>
-                                    <span class="text-muted" style="font-size:13px;">No se encontraron productos con los filtros aplicados.</span>
+                                    <span class="text-muted" style="font-size:13px;">@Labels.Product_NoResults</span>
                                 </td>
                             </tr>
                         }
@@ -307,7 +307,7 @@
                     <div class="alert alert-danger mt-3 mb-0 py-2" style="font-size:13px;">@_movError</div>
                 }
                 <div class="modal-custom-footer">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="CloseMovementModal">Cancelar</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="CloseMovementModal">@Labels.Action_Cancel</button>
                     <button type="submit" class="btn btn-principal btn-sm" disabled="@_movLoading">
                         @if (_movLoading) { <span class="spinner-border spinner-border-sm mr-1"></span> }
                         Registrar
@@ -444,24 +444,24 @@
         if (error is not null) { _movError = error; return; }
         CloseMovementModal();
         InventoryEvents.NotifyStockChanged();
-        await JS.InvokeVoidAsync("swalSuccess", "Movimiento registrado", "El movimiento fue registrado correctamente.");
+        await JS.InvokeVoidAsync("swalSuccess", Labels.Confirm_Saved, Labels.Movement_RegisteredOk);
         await LoadProducts();
     }
 
     private async Task ConfirmDelete(ProductModel product)
     {
         var ok = await JS.InvokeAsync<bool>("swalConfirm",
-            "¿Eliminar producto?",
-            $"Se eliminará '{product.Name}'. Esta acción no se puede deshacer.",
-            "Sí, eliminar");
+            Labels.Product_DeleteConfirm,
+            $"'{product.Name}'. {Labels.Product_DeleteConfirmMsg}",
+            Labels.Confirm_DeleteButton);
         if (!ok) return;
         var result = await Products.DeleteAsync(product.Id);
         if (result)
         {
-            await JS.InvokeVoidAsync("swalSuccess", "Producto eliminado", $"'{product.Name}' fue eliminado correctamente.");
+            await JS.InvokeVoidAsync("swalSuccess", Labels.Confirm_Deleted, $"'{product.Name}' {Labels.Product_DeletedOk}");
             await LoadProducts();
         }
         else
-            await JS.InvokeVoidAsync("swalError", "Error", "No se pudo eliminar el producto.");
+            await JS.InvokeVoidAsync("swalError", Labels.Confirm_Error, Labels.Product_DeleteError);
     }
 }

@@ -12,4 +12,8 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.24" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NetInventory.Resources\NetInventory.Resources.csproj" />
+  </ItemGroup>
+
 </Project>
